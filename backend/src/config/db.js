@@ -198,14 +198,14 @@ function initDatabase() {
       });
   }
 
-  // SQLite dev fallback
-  const betterSqlite3 = require('better-sqlite3');
+  // SQLite dev fallback (Node.js built-in node:sqlite module)
+  const { DatabaseSync } = require('node:sqlite');
   const dbFile =
     path.resolve(__dirname, '..', '..', process.env.DB_FILE || 'data/devdb.sqlite');
   fs.mkdirSync(path.dirname(dbFile), { recursive: true });
-  sqlite = new betterSqlite3(dbFile);
-  sqlite.pragma('journal_mode = WAL');
-  sqlite.pragma('foreign_keys = ON');
+  sqlite = new DatabaseSync(dbFile);
+  sqlite.exec('PRAGMA journal_mode = WAL');
+  sqlite.exec('PRAGMA foreign_keys = ON');
   sqlite.exec(SQLITE_DDL);
   return Promise.resolve();
 }
@@ -240,7 +240,7 @@ function insert(sql, params = []) {
     return pool.execute(sql, params).then(([result]) => ({ insertId: result.insertId }));
   }
   const info = sqlite.prepare(sql).run(...params);
-  return Promise.resolve({ insertId: info.lastInsertRowid });
+  return Promise.resolve({ insertId: Number(info.lastInsertRowid) });
 }
 
 // ---------------------------------------------------------------------------
@@ -251,6 +251,8 @@ const queries = {
     runSingle('SELECT user_id, role, email, full_name, password_hash, department_id, created_at FROM users WHERE email = ?', [email]),
   findUserById: (id) =>
     runSingle('SELECT user_id, role, email, full_name, department_id, created_at FROM users WHERE user_id = ?', [id]),
+  findUserWithPasswordById: (id) =>
+    runSingle('SELECT user_id, role, email, full_name, password_hash, department_id, created_at FROM users WHERE user_id = ?', [id]),
   createUser: (u) =>
     insert(
       'INSERT INTO users (role, email, full_name, password_hash, department_id) VALUES (?, ?, ?, ?, ?)',
@@ -270,15 +272,17 @@ const queries = {
     run('SELECT dept_id, dept_name, dept_type, sort_order FROM departments ORDER BY sort_order ASC'),
   findDeptById: (id) => runSingle('SELECT dept_id, dept_name FROM departments WHERE dept_id = ?', [id]),
   seedDepartments: (depts) => {
-    const stmtRows = depts.map((d) => [d.name, d.type, d.order]);
-    if (DRIVER === 'mysql') return Promise.reject(new Error('seedDepartments is handled in SQL scripts for MySQL'));
     const insertDept = sqlite.prepare(
       'INSERT OR IGNORE INTO departments (dept_name, dept_type, sort_order) VALUES (?, ?, ?)'
     );
-    const tx = sqlite.transaction((rows) => {
-      for (const r of rows) insertDept.run(...r);
-    });
-    tx(stmtRows);
+    sqlite.exec('BEGIN');
+    try {
+      for (const d of depts) insertDept.run(d.name, d.type, d.order);
+      sqlite.exec('COMMIT');
+    } catch (err) {
+      sqlite.exec('ROLLBACK');
+      throw err;
+    }
     return Promise.resolve();
   },
 };

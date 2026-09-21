@@ -76,7 +76,7 @@ async function login(req, res) {
   let user = await queries.findUserByEmail(norm);
   if (!user) {
     const student = await queries.findStudentByMatric(norm);
-    if (student) user = await queries.findUserById(student.student_id);
+    if (student) user = await queries.findUserWithPasswordById(student.student_id);
   }
   if (!user) {
     return res.status(401).json({ error: 'Invalid credentials.' });

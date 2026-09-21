@@ -117,16 +117,4 @@ router.post('/login', auth.login);
  */
 router.get('/me', authenticate, auth.me);
 
-/**
- * @swagger
- * /api/departments:
- *   get:
- *     tags: [Data]
- *     summary: List all clearance departments (in workflow order)
- *     responses:
- *       200:
- *         description: Array of departments
- */
-router.get('/departments', auth.listDepartments);
-
 module.exports = router;
