@@ -4,6 +4,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const authRoutes = require('./routes/authRoutes');
 const departmentsRoutes = require('./routes/departmentsRoutes');
+const olevelRoutes = require('./routes/olevelRoutes');
 const { initDatabase, queries, DRIVER } = require('./config/db');
 
 const DEFAULT_DEPARTMENTS = [
@@ -36,6 +37,7 @@ async function bootstrap() {
 
   app.use('/api/auth', authRoutes);
   app.use('/api', departmentsRoutes);
+  app.use('/api/olevel', olevelRoutes);
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   // 404

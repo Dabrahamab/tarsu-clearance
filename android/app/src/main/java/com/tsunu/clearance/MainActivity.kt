@@ -26,6 +26,10 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
+        binding.btnVerifyOlevel.setOnClickListener {
+            startActivity(Intent(this, OlevelActivity::class.java))
+        }
+
         // Sprint 3: replace placeholder with the live clearance status tracker,
         // O'Level verification status, and document uploads.
         val statusHint = findViewById<TextView>(R.id.tvStatusPlaceholder)

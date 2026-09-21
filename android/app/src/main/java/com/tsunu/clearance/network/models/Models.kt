@@ -43,3 +43,47 @@ data class DepartmentsResponse(
 data class ApiError(
     @SerializedName("error") val error: String,
 )
+
+data class OlevelVerifyRequest(
+    @SerializedName("examBody") val examBody: String,
+    @SerializedName("examNumber") val examNumber: String,
+    @SerializedName("examYear") val examYear: Int,
+    @SerializedName("cardPinSerial") val cardPinSerial: String,
+)
+
+data class OlevelSubject(
+    @SerializedName("subject") val subject: String,
+    @SerializedName("grade") val grade: String,
+)
+
+data class OlevelVerifyResponse(
+    @SerializedName("verifyId") val verifyId: Long? = null,
+    @SerializedName("status") val status: String,
+    @SerializedName("candidateName") val candidateName: String? = null,
+    @SerializedName("examBody") val examBody: String? = null,
+    @SerializedName("examNumber") val examNumber: String? = null,
+    @SerializedName("examYear") val examYear: Int? = null,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("nameMatch") val nameMatch: String? = null,
+    @SerializedName("subjects") val subjects: List<OlevelSubject>? = null,
+)
+
+data class OlevelVerificationItem(
+    @SerializedName("verify_id") val verifyId: Long? = null,
+    @SerializedName("student_id") val studentId: Long? = null,
+    @SerializedName("exam_body") val examBody: String? = null,
+    @SerializedName("exam_number") val examNumber: String? = null,
+    @SerializedName("exam_year") val examYear: Int? = null,
+    @SerializedName("card_pin_serial") val cardPinSerial: String? = null,
+    @SerializedName("candidate_name") val candidateName: String? = null,
+    @SerializedName("verification_status") val verificationStatus: String? = null,
+    @SerializedName("result_payload") val resultPayload: String? = null,
+    @SerializedName("verified_at") val verifiedAt: String? = null,
+    @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("student_name") val studentName: String? = null,
+    @SerializedName("matric_no") val matricNo: String? = null,
+)
+
+data class OlevelVerificationsResponse(
+    @SerializedName("verifications") val verifications: List<OlevelVerificationItem>,
+)

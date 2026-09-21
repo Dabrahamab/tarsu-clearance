@@ -38,4 +38,20 @@
     <string name="status_placeholder">Your clearance progress and O\'Level verification status will appear here.</string>
     <string name="sprint_line">Sprint 1 — authentication connected to the clearance API.</string>
     <string name="logout">Logout</string>
+    <string name="verify_olevel">Verify O\'Level Result</string>
+
+    <!-- O'Level -->
+    <string name="olevel_title">O\'Level Verification</string>
+    <string name="olevel_subtitle">Submit your WAEC / NECO / NABTEB result details</string>
+    <string name="exam_body_hint">Examination Body</string>
+    <string name="exam_number_hint">Examination Number (e.g. 4250101)</string>
+    <string name="exam_year_hint">Examination Year</string>
+    <string name="card_pin_hint">Card PIN / Serial</string>
+    <string name="verify_result">Verify Result</string>
+    <string name="invalid_exam_year">Enter a valid exam year</string>
+    <string name="olevel_login_required">Please log in first</string>
+    <string name="olevel_verify_failed">Verification failed. Please try again.</string>
+    <string name="olevel_duplicate">This result was already submitted.</string>
+    <string name="result_candidate">Candidate: %1$s</string>
+    <string name="result_subjects_heading">Result details:</string>
 </resources>

@@ -38,11 +38,18 @@
         android:textSize="13sp" />
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnVerifyOlevel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/verify_olevel" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnLogout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:backgroundTint="@color/error"
         android:text="@string/logout" />
 

@@ -285,6 +285,60 @@ const queries = {
     }
     return Promise.resolve();
   },
+
+  // -------------------------------------------------------------------------
+  // O'Level verification queries (Sprint 2 — blueprint §4-B)
+  // -------------------------------------------------------------------------
+  createOlevelVerification: (v) =>
+    insert(
+      `INSERT INTO olevel_verifications
+         (student_id, exam_body, exam_number, exam_year, card_pin_serial, candidate_name, verification_status, result_payload)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [v.studentId, v.examBody, v.examNumber, v.examYear, v.cardPinSerial, v.candidateName, v.status || 'PENDING', v.resultPayload || null]
+    ),
+  findOlevelByComposite: ({ examBody, examNumber, examYear }) =>
+    runSingle(
+      `SELECT verify_id, student_id, exam_body, exam_number, exam_year, card_pin_serial,
+              candidate_name, verification_status, result_payload, verified_at, created_at
+       FROM olevel_verifications
+       WHERE exam_body = ? AND exam_number = ? AND exam_year = ?`,
+      [examBody, examNumber, examYear]
+    ),
+  findOlevelById: (verifyId) =>
+    runSingle(
+      `SELECT v.verify_id, v.student_id, v.exam_body, v.exam_number, v.exam_year, v.card_pin_serial,
+              v.candidate_name, v.verification_status, v.result_payload, v.verified_at, v.created_at,
+              s.full_name AS student_name, s.matric_no
+       FROM olevel_verifications v
+       LEFT JOIN students s ON s.student_id = v.student_id
+       WHERE v.verify_id = ?`,
+      [verifyId]
+    ),
+  listOlevelByStudent: (studentId) =>
+    run(
+      `SELECT verify_id, student_id, exam_body, exam_number, exam_year, card_pin_serial,
+              candidate_name, verification_status, result_payload, verified_at, created_at
+       FROM olevel_verifications
+       WHERE student_id = ?
+       ORDER BY created_at DESC`,
+      [studentId]
+    ),
+  listAllOlevel: () =>
+    run(
+      `SELECT v.verify_id, v.student_id, v.exam_body, v.exam_number, v.exam_year, v.card_pin_serial,
+              v.candidate_name, v.verification_status, v.verified_at, v.created_at,
+              s.full_name AS student_name, s.matric_no
+       FROM olevel_verifications v
+       LEFT JOIN students s ON s.student_id = v.student_id
+       ORDER BY v.created_at DESC`
+    ),
+  updateOlevelStatus: (verifyId, { status, resultPayload }) =>
+    run(
+      `UPDATE olevel_verifications
+       SET verification_status = ?, result_payload = ?, verified_at = CURRENT_TIMESTAMP
+       WHERE verify_id = ?`,
+      [status, resultPayload || null, verifyId]
+    ),
 };
 
 module.exports = { DRIVER, initDatabase, run, runSingle, insert, queries };
