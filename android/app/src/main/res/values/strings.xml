@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Student Clearance</string>
+
+    <!-- Login -->
+    <string name="login_title">Student Login</string>
+    <string name="login_subtitle">Taraba State University</string>
+    <string name="identifier_hint">Email or Matric Number</string>
+    <string name="password_hint">Password</string>
+    <string name="login">Login</string>
+    <string name="no_account_register">Don\'t have an account? Register</string>
+    <string name="login_success">Login successful</string>
+    <string name="login_failed">Login failed. Check your credentials.</string>
+
+    <!-- Register -->
+    <string name="register_title">Student Registration</string>
+    <string name="register_subtitle">Create your clearance account</string>
+    <string name="full_name_hint">Full Name</string>
+    <string name="matric_hint">Matriculation Number (e.g. 2023/12345)</string>
+    <string name="email_hint">Institutional Email</string>
+    <string name="department_hint">Department</string>
+    <string name="confirm_password_hint">Confirm Password</string>
+    <string name="register">Create Account</string>
+    <string name="have_account_login">Already registered? Login</string>
+    <string name="register_success">Account created successfully</string>
+    <string name="register_failed">Registration failed. Please try again.</string>
+
+    <!-- Common -->
+    <string name="field_required">All fields are required</string>
+    <string name="password_too_short">Password must be at least 8 characters</string>
+    <string name="password_mismatch">Passwords do not match</string>
+    <string name="departments_not_loaded">Departments not loaded. Check your connection.</string>
+    <string name="network_error">Network error. Check your connection.</string>
+
+    <!-- Home -->
+    <string name="welcome_user">Welcome, %1$s</string>
+    <string name="placeholder_name">Student</string>
+    <string name="status_placeholder">Your clearance progress and O\'Level verification status will appear here.</string>
+    <string name="sprint_line">Sprint 1 — authentication connected to the clearance API.</string>
+    <string name="logout">Logout</string>
+</resources>
