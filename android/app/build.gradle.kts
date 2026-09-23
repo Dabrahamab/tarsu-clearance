@@ -14,6 +14,11 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
+        // Default targets the Android emulator (10.0.2.2 = host loopback).
+        // For a physical device:  assembleDebug -PapiBaseUrl=http://<your-lan-ip>:5000/
+        val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?) ?: "http://10.0.2.2:5000/"
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
     buildTypes {
@@ -38,6 +43,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
