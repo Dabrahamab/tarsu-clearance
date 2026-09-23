@@ -3,14 +3,14 @@ const auth = require('../controllers/authController');
 
 /**
  * @swagger
- * /api/departments:
+ * /api/faculties:
  *   get:
  *     tags: [Data]
- *     summary: List all clearance departments (in workflow order)
+ *     summary: List all faculties and their departments
  *     responses:
  *       200:
- *         description: Array of departments
+ *         description: Faculties and full department catalog
  */
-router.get('/departments', auth.listDepartments);
+router.get('/faculties', auth.listFaculties);
 
 module.exports = router;

@@ -138,6 +138,58 @@ router.patch(
 
 /**
  * @swagger
+ * /api/olevel/verifications/{verifyId}:
+ *   patch:
+ *     tags: [O'Level]
+ *     summary: Edit a verification record (ADMIN only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: verifyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Verification updated
+ *       403:
+ *         description: Admin only
+ */
+router.patch(
+  '/verifications/:verifyId',
+  authenticate,
+  olevelController.editVerification
+);
+
+/**
+ * @swagger
+ * /api/olevel/verifications/{verifyId}:
+ *   delete:
+ *     tags: [O'Level]
+ *     summary: Delete a verification record (ADMIN only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: verifyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Verification deleted
+ *       403:
+ *         description: Admin only
+ */
+router.delete(
+  '/verifications/:verifyId',
+  authenticate,
+  olevelController.deleteVerification
+);
+
+/**
+ * @swagger
  * /api/olevel/upload:
  *   post:
  *     tags: [O'Level]

@@ -12,9 +12,9 @@ import com.tsunu.clearance.databinding.ActivityOfficerDashboardBinding
 import com.tsunu.clearance.network.ApiClient
 import com.tsunu.clearance.network.models.ApiError
 import com.tsunu.clearance.network.models.ApprovalItem
-import com.tsunu.clearance.network.models.ClearanceDetailResponse
 import com.tsunu.clearance.network.models.ClearanceListResponse
 import com.tsunu.clearance.network.models.ClearanceSummary
+import com.tsunu.clearance.network.models.StampRequest
 import com.tsunu.clearance.network.models.StudentsResponse
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
@@ -23,6 +23,7 @@ import retrofit2.HttpException
 class OfficerDashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityOfficerDashboardBinding
+    private var role: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +31,9 @@ class OfficerDashboardActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         supportActionBar?.title = getString(R.string.dashboard_title)
+        role = SessionManager.role(this)
+        if (role == "HOD") binding.tvScope.visibility = View.VISIBLE
+
         binding.btnSearch.setOnClickListener { searchStudents() }
         binding.btnLoadAll.setOnClickListener { loadAll() }
         binding.etSearch.setOnEditorActionListener { _, _, _ -> searchStudents(); true }
@@ -76,7 +80,6 @@ class OfficerDashboardActivity : AppCompatActivity() {
         data.students.forEach { s ->
             val card = clearanceCard()
             addTitle(card, "${s.fullName}\n(${s.matricNo})  —  ${s.deptName ?: "-"} · ${s.level ?: "-"}")
-            addText(card, "", "student #${s.studentId}")
             val view = card.root
             view.setOnClickListener { openStudentClearance(s.studentId ?: -1L, s.fullName ?: "Student") }
             binding.containerResults.addView(view)
@@ -138,7 +141,7 @@ class OfficerDashboardActivity : AppCompatActivity() {
     private fun addClearanceCard(c: ClearanceSummary) {
         val card = clearanceCard()
         addTitle(card, "${c.studentName ?: "Student ${c.studentId}"}  (${c.matricNo ?: "-"})\n" +
-            "${c.departmentName ?: "-"} · status: ${c.overallStatus ?: "?"}")
+            "${c.departmentName ?: "-"} · ${statusLabel(c.overallStatus)}")
         addText(card, "", "Ref ${c.clearanceRef ?: ""}, submitted ${c.submittedAt ?: ""}")
         (c.approvals ?: emptyList()).forEach { a ->
             addApprovalRow(card, c.clearanceId ?: 0, a)
@@ -146,25 +149,52 @@ class OfficerDashboardActivity : AppCompatActivity() {
         binding.containerResults.addView(card.root)
     }
 
+    private fun canStamp(a: ApprovalItem): Boolean {
+        if (a.status != "PENDING") return false
+        if (role == "HOD") {
+            return a.unitCode?.uppercase() == "HOD" || a.unitName?.uppercase()?.contains("HOD") == true
+        }
+        return true
+    }
+
     private fun addApprovalRow(card: ClearanceCard, clearanceId: Long, a: ApprovalItem) {
-        val line = "${a.deptName ?: "Dept ${a.deptId}"}  —  ${a.status ?: "PENDING"}" +
+        val unit = when {
+            !a.unitName.isNullOrBlank() -> a.unitName
+            !a.unitCode.isNullOrBlank() -> a.unitCode
+            else -> "Unit ${a.unitId}"
+        }
+        val line = "$unit  —  ${statusLabel(a.status)}" +
             (if (!a.remarks.isNullOrBlank()) "  (${a.remarks})" else "")
-        addText(card, line, "")
-        if (a.status == "PENDING" && (a.deptId != null)) {
+        val tv = addText(card, line, "")
+        if (a.status == "PENDING") tv.setTextColor(resources.getColor(R.color.status_pending, null))
+        if (canStamp(a) && a.unitId != null) {
             val ok = Button(this).apply { text = getString(R.string.dashboard_approve) }
             val no = Button(this).apply { text = getString(R.string.dashboard_reject) }
-            ok.setOnClickListener { stamp(clearanceId, a.deptId, "APPROVED", null) }
-            no.setOnClickListener { stamp(clearanceId, a.deptId, "REJECTED", getString(R.string.dashboard_default_reject_note)) }
+            ok.setOnClickListener { stamp(clearanceId, a.unitId!!, "APPROVED", null) }
+            no.setOnClickListener { stamp(clearanceId, a.unitId!!, "REJECTED", getString(R.string.dashboard_default_reject_note)) }
             card.container.addView(ok)
             card.container.addView(no)
         }
     }
 
-    private fun stamp(clearanceId: Long, deptId: Long, status: String, remarks: String?) {
+    private fun statusLabel(status: String?): String = when (status) {
+        "APPROVED" -> getString(R.string.olevel_status_verified)
+        "REJECTED" -> getString(R.string.olevel_status_failed)
+        "ACTION_REQUIRED" -> getString(R.string.dashboard_action_required)
+        "BOOK_OVERDUE" -> getString(R.string.dashboard_book_overdue)
+        else -> getString(R.string.olevel_status_pending_upload)
+    }
+
+    private fun stamp(clearanceId: Long, unitId: Long, status: String, remarks: String?) {
         val token = token() ?: return
         lifecycleScope.launch {
             try {
-                val r = ApiClient.api.stampApproval("Bearer $token", clearanceId, deptId, com.tsunu.clearance.network.models.StampRequest(status, remarks))
+                val r = ApiClient.api.stampApproval(
+                    "Bearer $token",
+                    clearanceId,
+                    unitId,
+                    StampRequest(status, remarks),
+                )
                 if (r.isSuccessful) {
                     Toast.makeText(this@OfficerDashboardActivity, getString(R.string.dashboard_stamped, status), Toast.LENGTH_SHORT).show()
                     loadAll()
@@ -202,13 +232,14 @@ class OfficerDashboardActivity : AppCompatActivity() {
         card.main.setPadding(0, 0, 0, dp(6))
     }
 
-    private fun addText(card: ClearanceCard, text: String, sub: String = "") {
+    private fun addText(card: ClearanceCard, text: String, sub: String = ""): TextView {
         val tv = TextView(this)
         tv.text = if (sub.isEmpty()) text else "$text  $sub"
         tv.setTextColor(resources.getColor(R.color.secondary_text, null))
         tv.textSize = 13f
         tv.setPadding(0, dp(2), 0, dp(2))
         card.container.addView(tv)
+        return tv
     }
 
     private fun addText(text: String) {

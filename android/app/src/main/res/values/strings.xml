@@ -3,7 +3,7 @@
     <string name="app_name">Student Clearance</string>
 
     <!-- Login -->
-    <string name="login_title">Student Login</string>
+    <string name="login_title">TASU Student Login</string>
     <string name="login_subtitle">Taraba State University</string>
     <string name="identifier_hint">Email or Matric Number</string>
     <string name="password_hint">Password</string>
@@ -17,8 +17,11 @@
     <string name="register_subtitle">Create your clearance account</string>
     <string name="full_name_hint">Full Name</string>
     <string name="matric_hint">Matriculation Number (e.g. 2023/12345)</string>
-    <string name="email_hint">Institutional Email</string>
+    <string name="email_hint">Student Mail</string>
+    <string name="faculty_hint">Faculty</string>
     <string name="department_hint">Department</string>
+    <string name="select_faculty_first">Select a faculty first</string>
+    <string name="faculty_departments_not_loaded">Faculties / departments not loaded. Check your connection.</string>
     <string name="confirm_password_hint">Confirm Password</string>
     <string name="register">Create Account</string>
     <string name="have_account_login">Already registered? Login</string>
@@ -36,13 +39,14 @@
     <string name="welcome_user">Welcome, %1$s</string>
     <string name="placeholder_name">Student</string>
     <string name="status_placeholder">Your clearance progress and O\'Level verification status will appear here.</string>
-    <string name="sprint_line">Sprint 1 — authentication connected to the clearance API.</string>
+    <string name="sprint_line">Taraba State University — Student Clearance System.</string>
     <string name="logout">Logout</string>
-    <string name="verify_olevel">Verify O\'Level Result</string>
+    <string name="verify_olevel">My O\'Level Result</string>
     <string name="my_progress">My Clearance Progress</string>
-    <string name="officer_dashboard_button">Officer / Admin Dashboard</string>
+    <string name="officer_dashboard_button">Clearance Dashboard</string>
+    <string name="admin_dashboard_button">Admin Dashboard</string>
 
-    <!-- O'Level upload -->
+    <!-- O'Level manual entry / upload -->
     <string name="olevel_upload">Upload O\'Level Document</string>
     <string name="olevel_uploading">Uploading…</string>
     <string name="olevel_upload_done">Document uploaded successfully</string>
@@ -50,22 +54,49 @@
     <string name="olevel_no_file">Choose a file first</string>
     <string name="olevel_file_ready">Ready: %1$s — tap Upload to send</string>
     <string name="olevel_upload_now">Upload Now</string>
+    <string name="olevel_exam_series">Sitting / Series</string>
+    <string name="olevel_series_first">First Sitting (Internal)</string>
+    <string name="olevel_series_second">Second Sitting (External)</string>
+    <string name="olevel_card_serial_hint">Card Serial Number</string>
+    <string name="olevel_subjects_label">Subjects and Grades (%1$d to %2$d entered)</string>
+    <string name="olevel_add_subject">Add Subject</string>
+    <string name="olevel_subject_name_hint">Subject %1$d</string>
+    <string name="olevel_preview">Preview Entry</string>
+    <string name="olevel_submit">Submit Result</string>
+    <string name="olevel_back_to_edit">Back to Edit</string>
+    <string name="olevel_subject_hint">Subject</string>
+    <string name="olevel_grade_hint">Grade</string>
+    <string name="olevel_too_few_subjects">Enter at least 6 subjects.</string>
+    <string name="olevel_empty_subject">Complete every subject row (name + grade selected).</string>
+    <string name="olevel_preview_title">Preview of your entry</string>
+    <string name="olevel_preview_pin_serial">PIN: %1$s · Serial: %2$s</string>
+    <string name="olevel_preview_series">%1$s — %2$d</string>
+    <string name="olevel_series_label">Series: %1$s</string>
+    <string name="olevel_status_pending_upload">Pending Upload</string>
+    <string name="olevel_status_completed">Completed</string>
+    <string name="olevel_status_failed">Failed</string>
+    <string name="olevel_status_verified">Verified</string>
+    <string name="olevel_status_rejected">Failed — rejected. You may re-upload.</string>
+    <string name="olevel_result_status">Status: %1$s</string>
+    <string name="olevel_current_entries">Submitted O\'Level results:</string>
+    <string name="olevel_no_entries">No O\'Level results submitted yet.</string>
 
     <!-- Progress -->
     <string name="progress_title">Clearance Progress</string>
     <string name="progress_overall">Clearance progress</string>
     <string name="progress_overall_status">Overall status: %1$s</string>
     <string name="progress_ref">Reference: %1$s</string>
-    <string name="progress_steps">Department / office approvals:</string>
+    <string name="progress_steps">Clearance units:</string>
     <string name="progress_documents">Uploaded documents:</string>
     <string name="progress_apply">Start My Clearance</string>
     <string name="progress_refresh">Refresh</string>
     <string name="progress_not_started">You have not started your clearance yet.</string>
     <string name="progress_no_approvals">No approval steps yet — start your clearance to generate them.</string>
     <string name="progress_no_documents">No documents uploaded yet.</string>
+    <string name="progress_olevel_heading">O\'Level result:</string>
 
-    <!-- Officer dashboard -->
-    <string name="dashboard_title">Officer / Admin Dashboard</string>
+    <!-- Officer / HOD dashboard -->
+    <string name="dashboard_title">Clearance Dashboard</string>
     <string name="dashboard_search_hint">Search matric number or name</string>
     <string name="dashboard_search">Search</string>
     <string name="dashboard_load_all">Load all clearances</string>
@@ -74,23 +105,48 @@
     <string name="dashboard_clearances_empty">No clearances yet.</string>
     <string name="dashboard_approve">Approve</string>
     <string name="dashboard_reject">Reject</string>
+    <string name="dashboard_book_overdue">Book Overdue</string>
+    <string name="dashboard_action_required">Action Required</string>
     <string name="dashboard_default_reject_note">Rejected by officer</string>
     <string name="dashboard_stamped">Approval marked: %1$s</string>
     <string name="dashboard_open_student">%1$s</string>
     <string name="dashboard_no_clearance_for">%1$s has not started their clearance yet.</string>
+    <string name="dashboard_hod_scope">HOD view — your department only.</string>
 
     <!-- O'Level -->
-    <string name="olevel_title">O\'Level Verification</string>
-    <string name="olevel_subtitle">Submit your WAEC / NECO / NABTEB result details</string>
+    <string name="olevel_title">My O\'Level Result</string>
+    <string name="olevel_subtitle">Enter your WAEC / NECO / NABTEB result details</string>
     <string name="exam_body_hint">Examination Body</string>
     <string name="exam_number_hint">Examination Number (e.g. 4250101)</string>
     <string name="exam_year_hint">Examination Year</string>
-    <string name="card_pin_hint">Card PIN / Serial</string>
-    <string name="verify_result">Verify Result</string>
+    <string name="card_pin_hint">Card PIN</string>
+    <string name="verify_result">Preview &amp; Upload</string>
     <string name="invalid_exam_year">Enter a valid exam year</string>
     <string name="olevel_login_required">Please log in first</string>
     <string name="olevel_verify_failed">Verification failed. Please try again.</string>
     <string name="olevel_duplicate">This result was already submitted.</string>
     <string name="result_candidate">Candidate: %1$s</string>
     <string name="result_subjects_heading">Result details:</string>
+
+    <!-- Admin dashboard -->
+    <string name="admin_title">Admin Dashboard</string>
+    <string name="admin_register_dept">Register new department</string>
+    <string name="admin_register_unit">Register new clearance unit</string>
+    <string name="admin_faculty_hint">Faculty</string>
+    <string name="admin_department_name_hint">Department name</string>
+    <string name="admin_unit_code_hint">Unit code (e.g. SECURITY)</string>
+    <string name="admin_unit_name_hint">Unit name</string>
+    <string name="admin_create">Create</string>
+    <string name="admin_dept_created">Department created: %1$s</string>
+    <string name="admin_unit_created">Clearance unit created: %1$s</string>
+    <string name="admin_olevel_records">Manage O\'Level verification records:</string>
+    <string name="admin_load_records">Load verification records</string>
+    <string name="admin_no_records">No verification records.</string>
+    <string name="admin_mark_verified">Mark Verified</string>
+    <string name="admin_mark_rejected">Mark Failed</string>
+    <string name="admin_delete">Delete</string>
+    <string name="admin_deleted">Record deleted.</string>
+    <string name="admin_updated">Record updated: %1$s</string>
+    <string name="admin_required">All fields are required.</string>
+    <string name="misc">Admin management — student entries are only editable by the admin.</string>
 </resources>

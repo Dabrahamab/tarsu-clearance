@@ -7,28 +7,11 @@ const departmentsRoutes = require('./routes/departmentsRoutes');
 const olevelRoutes = require('./routes/olevelRoutes');
 const clearanceRoutes = require('./routes/clearanceRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const { initDatabase, queries, DRIVER } = require('./config/db');
+const { initDatabase, DRIVER } = require('./config/db');
 const { UPLOAD_DIR } = require('./middleware/upload');
-
-const DEFAULT_DEPARTMENTS = [
-  { name: 'Computer Science Department', type: 'DEPARTMENT', order: 1 },
-  { name: 'University Library', type: 'LIBRARY', order: 2 },
-  { name: 'Bursary & Finance', type: 'BURSARY', order: 3 },
-  { name: 'Student Affairs Division', type: 'STUDENT_AFFAIRS', order: 4 },
-  { name: 'Registry / Senate', type: 'REGISTRY', order: 5 },
-];
 
 async function bootstrap() {
   await initDatabase();
-
-  // Seed default departments for the SQLite dev fallback.
-  if (DRIVER === 'sqlite') {
-    try {
-      await queries.seedDepartments(DEFAULT_DEPARTMENTS);
-    } catch {
-      /* tables already consistent */
-    }
-  }
 
   const app = express();
   app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));

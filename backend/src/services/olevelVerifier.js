@@ -67,10 +67,10 @@ function validateCredential({ examBody, examNumber, examYear, cardPinSerial }) {
     return { ok: false, error: 'examYear must be a year between 1980 and the current year.' };
   }
   const pin = String(cardPinSerial || '').replace(/\s+/g, '').toUpperCase();
-  if (!/^[A-Z0-9-]{10,20}$/.test(pin)) {
+  if (pin && !/^[A-Z0-9-]{10,20}$/.test(pin)) {
     return { ok: false, error: 'cardPinSerial must be a 10–20 character PIN/serial.' };
   }
-  return { ok: true, normalized: { examBody, examNumber: number, examYear: year, cardPinSerial: pin } };
+  return { ok: true, normalized: { examBody, examNumber: number, examYear: year, cardPinSerial: pin || null } };
 }
 
 /**

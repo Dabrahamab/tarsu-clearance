@@ -1,12 +1,15 @@
 package com.tsunu.clearance.network
 
 import com.tsunu.clearance.network.models.AuthResponse
+import com.tsunu.clearance.network.models.CatalogCreateRequest
+import com.tsunu.clearance.network.models.CatalogCreateResponse
 import com.tsunu.clearance.network.models.ClearanceDetailResponse
 import com.tsunu.clearance.network.models.ClearanceListResponse
-import com.tsunu.clearance.network.models.DepartmentsResponse
 import com.tsunu.clearance.network.models.DocumentsResponse
+import com.tsunu.clearance.network.models.FacultiesResponse
 import com.tsunu.clearance.network.models.LoginRequest
 import com.tsunu.clearance.network.models.MyProgressResponse
+import com.tsunu.clearance.network.models.OlevelStatusUpdateRequest
 import com.tsunu.clearance.network.models.OlevelVerificationsResponse
 import com.tsunu.clearance.network.models.OlevelVerifyRequest
 import com.tsunu.clearance.network.models.OlevelVerifyResponse
@@ -17,6 +20,7 @@ import com.tsunu.clearance.network.models.UploadDocumentResponse
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
@@ -34,8 +38,8 @@ interface ClearanceApi {
     @POST("api/auth/login")
     suspend fun login(@Body body: LoginRequest): Response<AuthResponse>
 
-    @GET("api/departments")
-    suspend fun departments(): Response<DepartmentsResponse>
+    @GET("api/faculties")
+    suspend fun faculties(): Response<FacultiesResponse>
 
     @POST("api/olevel/verify")
     suspend fun verifyOlevel(
@@ -45,6 +49,22 @@ interface ClearanceApi {
 
     @GET("api/olevel/my")
     suspend fun myOlevel(@Header("Authorization") token: String): Response<OlevelVerificationsResponse>
+
+    @GET("api/olevel/verifications")
+    suspend fun listVerifications(@Header("Authorization") token: String): Response<OlevelVerificationsResponse>
+
+    @PATCH("api/olevel/verifications/{verifyId}")
+    suspend fun updateVerification(
+        @Header("Authorization") token: String,
+        @Path("verifyId") verifyId: Long,
+        @Body body: OlevelStatusUpdateRequest,
+    ): Response<com.tsunu.clearance.network.models.OlevelUpdateResponse>
+
+    @DELETE("api/olevel/verifications/{verifyId}")
+    suspend fun deleteVerification(
+        @Header("Authorization") token: String,
+        @Path("verifyId") verifyId: Long,
+    ): Response<com.tsunu.clearance.network.models.OlevelDeleteResponse>
 
     @Multipart
     @POST("api/olevel/upload")
@@ -72,11 +92,11 @@ interface ClearanceApi {
         @Path("clearanceId") clearanceId: Long,
     ): Response<ClearanceDetailResponse>
 
-    @PATCH("api/clearance/{clearanceId}/approvals/{deptId}")
+    @PATCH("api/clearance/{clearanceId}/approvals/{unitId}")
     suspend fun stampApproval(
         @Header("Authorization") token: String,
         @Path("clearanceId") clearanceId: Long,
-        @Path("deptId") deptId: Long,
+        @Path("unitId") unitId: Long,
         @Body body: StampRequest,
     ): Response<ClearanceDetailResponse>
 
@@ -85,4 +105,10 @@ interface ClearanceApi {
         @Header("Authorization") token: String,
         @Query("q") q: String,
     ): Response<StudentsResponse>
+
+    @POST("api/admin/catalog")
+    suspend fun createCatalog(
+        @Header("Authorization") token: String,
+        @Body body: CatalogCreateRequest,
+    ): Response<CatalogCreateResponse>
 }

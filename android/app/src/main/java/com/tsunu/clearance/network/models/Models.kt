@@ -6,6 +6,7 @@ data class RegisterRequest(
     @SerializedName("matricNo") val matricNo: String? = null,
     @SerializedName("fullName") val fullName: String? = null,
     @SerializedName("email") val email: String? = null,
+    @SerializedName("facultyId") val facultyId: Int? = null,
     @SerializedName("departmentId") val departmentId: Int? = null,
     @SerializedName("password") val password: String? = null,
     @SerializedName("level") val level: String? = null,
@@ -29,15 +30,21 @@ data class AuthResponse(
     @SerializedName("user") val user: User,
 )
 
+data class Faculty(
+    @SerializedName("faculty_id") val facultyId: Int,
+    @SerializedName("faculty_name") val facultyName: String,
+    @SerializedName("sort_order") val sortOrder: Int? = null,
+)
+
 data class Department(
     @SerializedName("dept_id") val deptId: Int,
     @SerializedName("dept_name") val deptName: String,
-    @SerializedName("dept_type") val deptType: String,
-    @SerializedName("sort_order") val sortOrder: Int,
+    @SerializedName("faculty_id") val facultyId: Int? = null,
 )
 
-data class DepartmentsResponse(
-    @SerializedName("departments") val departments: List<Department>,
+data class FacultiesResponse(
+    @SerializedName("faculties") val faculties: List<Faculty> = emptyList(),
+    @SerializedName("departments") val departments: List<Department> = emptyList(),
 )
 
 data class ApiError(
@@ -46,9 +53,12 @@ data class ApiError(
 
 data class OlevelVerifyRequest(
     @SerializedName("examBody") val examBody: String,
+    @SerializedName("examSeries") val examSeries: String,
     @SerializedName("examNumber") val examNumber: String,
     @SerializedName("examYear") val examYear: Int,
-    @SerializedName("cardPinSerial") val cardPinSerial: String,
+    @SerializedName("cardPin") val cardPin: String,
+    @SerializedName("cardSerial") val cardSerial: String,
+    @SerializedName("subjects") val subjects: List<OlevelSubject>,
 )
 
 data class OlevelSubject(
@@ -56,25 +66,42 @@ data class OlevelSubject(
     @SerializedName("grade") val grade: String,
 )
 
+data class OlevelPreview(
+    @SerializedName("examBody") val examBody: String? = null,
+    @SerializedName("examSeries") val examSeries: String? = null,
+    @SerializedName("examNumber") val examNumber: String? = null,
+    @SerializedName("examYear") val examYear: Int? = null,
+    @SerializedName("cardPin") val cardPin: String? = null,
+    @SerializedName("cardSerial") val cardSerial: String? = null,
+    @SerializedName("candidateName") val candidateName: String? = null,
+    @SerializedName("subjects") val subjects: List<OlevelSubject>? = null,
+    @SerializedName("totalSubjects") val totalSubjects: Int? = null,
+    @SerializedName("credits") val credits: Int? = null,
+    @SerializedName("provider") val provider: String? = null,
+    @SerializedName("message") val message: String? = null,
+)
+
 data class OlevelVerifyResponse(
     @SerializedName("verifyId") val verifyId: Long? = null,
     @SerializedName("status") val status: String,
     @SerializedName("candidateName") val candidateName: String? = null,
     @SerializedName("examBody") val examBody: String? = null,
+    @SerializedName("examSeries") val examSeries: String? = null,
     @SerializedName("examNumber") val examNumber: String? = null,
     @SerializedName("examYear") val examYear: Int? = null,
     @SerializedName("message") val message: String? = null,
-    @SerializedName("nameMatch") val nameMatch: String? = null,
-    @SerializedName("subjects") val subjects: List<OlevelSubject>? = null,
+    @SerializedName("preview") val preview: OlevelPreview? = null,
 )
 
 data class OlevelVerificationItem(
     @SerializedName("verify_id") val verifyId: Long? = null,
     @SerializedName("student_id") val studentId: Long? = null,
     @SerializedName("exam_body") val examBody: String? = null,
+    @SerializedName("exam_series") val examSeries: String? = null,
     @SerializedName("exam_number") val examNumber: String? = null,
     @SerializedName("exam_year") val examYear: Int? = null,
-    @SerializedName("card_pin_serial") val cardPinSerial: String? = null,
+    @SerializedName("card_pin") val cardPin: String? = null,
+    @SerializedName("card_serial") val cardSerial: String? = null,
     @SerializedName("candidate_name") val candidateName: String? = null,
     @SerializedName("verification_status") val verificationStatus: String? = null,
     @SerializedName("result_payload") val resultPayload: String? = null,
@@ -86,6 +113,40 @@ data class OlevelVerificationItem(
 
 data class OlevelVerificationsResponse(
     @SerializedName("verifications") val verifications: List<OlevelVerificationItem>,
+)
+
+data class OlevelStatusUpdateRequest(
+    @SerializedName("status") val status: String,
+)
+
+data class OlevelUpdateResponse(
+    @SerializedName("verification") val verification: OlevelVerificationItem? = null,
+    @SerializedName("error") val error: String? = null,
+)
+
+data class OlevelDeleteResponse(
+    @SerializedName("deleted") val deleted: Boolean? = null,
+    @SerializedName("error") val error: String? = null,
+)
+
+data class CatalogCreateRequest(
+    @SerializedName("kind") val kind: String,
+    @SerializedName("facultyId") val facultyId: Int? = null,
+    @SerializedName("facultyName") val facultyName: String? = null,
+    @SerializedName("departmentName") val departmentName: String? = null,
+    @SerializedName("unitCode") val unitCode: String? = null,
+    @SerializedName("unitName") val unitName: String? = null,
+    @SerializedName("sortOrder") val sortOrder: Int? = null,
+)
+
+data class CatalogCreateResponse(
+    @SerializedName("facultyId") val facultyId: Long? = null,
+    @SerializedName("facultyName") val facultyName: String? = null,
+    @SerializedName("departmentId") val departmentId: Long? = null,
+    @SerializedName("departmentName") val departmentName: String? = null,
+    @SerializedName("unitId") val unitId: Long? = null,
+    @SerializedName("unitCode") val unitCode: String? = null,
+    @SerializedName("unitName") val unitName: String? = null,
 )
 
 data class DocumentItem(
@@ -113,6 +174,7 @@ data class UploadDocumentResponse(
 data class Clearance(
     @SerializedName("clearance_id") val clearanceId: Long? = null,
     @SerializedName("student_id") val studentId: Long? = null,
+    @SerializedName("department_id") val departmentId: Long? = null,
     @SerializedName("overall_status") val overallStatus: String? = null,
     @SerializedName("submitted_at") val submittedAt: String? = null,
     @SerializedName("completed_at") val completedAt: String? = null,
@@ -122,13 +184,13 @@ data class Clearance(
 data class ApprovalItem(
     @SerializedName("approval_id") val approvalId: Long? = null,
     @SerializedName("clearance_id") val clearanceId: Long? = null,
-    @SerializedName("dept_id") val deptId: Long? = null,
+    @SerializedName("unit_id") val unitId: Long? = null,
     @SerializedName("status") val status: String? = null,
     @SerializedName("remarks") val remarks: String? = null,
     @SerializedName("approved_by_user_id") val approvedByUserId: Long? = null,
     @SerializedName("updated_at") val updatedAt: String? = null,
-    @SerializedName("dept_name") val deptName: String? = null,
-    @SerializedName("dept_type") val deptType: String? = null,
+    @SerializedName("unit_code") val unitCode: String? = null,
+    @SerializedName("unit_name") val unitName: String? = null,
 )
 
 data class StudentProfile(
@@ -145,6 +207,7 @@ data class StudentProfile(
 data class ClearanceSummary(
     @SerializedName("clearance_id") val clearanceId: Long? = null,
     @SerializedName("student_id") val studentId: Long? = null,
+    @SerializedName("department_id") val departmentId: Long? = null,
     @SerializedName("overall_status") val overallStatus: String? = null,
     @SerializedName("submitted_at") val submittedAt: String? = null,
     @SerializedName("completed_at") val completedAt: String? = null,

@@ -10,12 +10,12 @@ router.use(authenticate);
 router.post('/apply', authorize('STUDENT'), ctrl.applyClearance);
 router.get('/my', authorize('STUDENT'), ctrl.myProgress);
 
-// Officer / admin: dashboard + stamping.
-router.get('/all', authorize('OFFICER', 'ADMIN'), ctrl.listAllClearances);
-router.get('/:clearanceId', authorize('OFFICER', 'ADMIN'), ctrl.getClearanceDetail);
+// Staff (officer / HOD / admin): dashboard + stamping.
+router.get('/all', authorize('OFFICER', 'HOD', 'ADMIN'), ctrl.listAllClearances);
+router.get('/:clearanceId', authorize('OFFICER', 'HOD', 'ADMIN'), ctrl.getClearanceDetail);
 router.patch(
-  '/:clearanceId/approvals/:deptId',
-  authorize('OFFICER', 'ADMIN'),
+  '/:clearanceId/approvals/:unitId',
+  authorize('OFFICER', 'HOD', 'ADMIN'),
   ctrl.stampApproval
 );
 

@@ -52,12 +52,21 @@
         android:text="@string/my_progress" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnOfficerDashboard"
+        android:id="@+id/btnOfficialDashboard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:backgroundTint="@color/primary"
         android:text="@string/officer_dashboard_button"
+        android:visibility="gone" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAdminDashboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="@color/error"
+        android:text="@string/admin_dashboard_button"
         android:visibility="gone" />
 
     <com.google.android.material.button.MaterialButton

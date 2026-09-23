@@ -33,6 +33,16 @@
         android:layout_height="wrap_content"
         android:text="@string/dashboard_load_all" />
 
+    <TextView
+        android:id="@+id/tvScope"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/dashboard_hod_scope"
+        android:textSize="13sp"
+        android:textColor="@color/status_action_required"
+        android:visibility="gone" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"

@@ -3,7 +3,6 @@ package com.tsunu.clearance
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.tsunu.clearance.auth.LoginActivity
 import com.tsunu.clearance.databinding.ActivityMainBinding
@@ -35,17 +34,22 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, ProgressActivity::class.java))
         }
 
-        binding.btnOfficerDashboard.setOnClickListener {
+        binding.btnOfficialDashboard.setOnClickListener {
             startActivity(Intent(this, OfficerDashboardActivity::class.java))
         }
 
-        val role = SessionManager.role(this)
-        binding.btnOfficerDashboard.visibility =
-            if (role == "STUDENT") View.GONE else View.VISIBLE
+        binding.btnAdminDashboard.setOnClickListener {
+            startActivity(Intent(this, AdminDashboardActivity::class.java))
+        }
 
-        // Sprint 3: replace placeholder with the live clearance status tracker,
-        // O'Level verification status, and document uploads.
-        val statusHint = findViewById<TextView>(R.id.tvStatusPlaceholder)
-        statusHint.text = getString(R.string.status_placeholder)
+        val role = SessionManager.role(this)
+        val isStudent = role == "STUDENT"
+        val isStaff = role == "OFFICER" || role == "HOD" || role == "ADMIN"
+        val isAdmin = role == "ADMIN"
+
+        binding.btnVerifyOlevel.visibility = if (isStudent) View.VISIBLE else View.GONE
+        binding.btnProgress.visibility = if (isStudent) View.VISIBLE else View.GONE
+        binding.btnOfficialDashboard.visibility = if (isStaff) View.VISIBLE else View.GONE
+        binding.btnAdminDashboard.visibility = if (isAdmin) View.VISIBLE else View.GONE
     }
 }

@@ -13,6 +13,7 @@ import com.tsunu.clearance.databinding.ActivityRegisterBinding
 import com.tsunu.clearance.network.ApiClient
 import com.tsunu.clearance.network.models.ApiError
 import com.tsunu.clearance.network.models.Department
+import com.tsunu.clearance.network.models.Faculty
 import com.tsunu.clearance.network.models.RegisterRequest
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
@@ -20,7 +21,9 @@ import kotlinx.coroutines.launch
 class RegisterActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRegisterBinding
-    private val departments = mutableListOf<Department>()
+    private val faculties = mutableListOf<Faculty>()
+    private val allDepartments = mutableListOf<Department>()
+    private var selectedFacultyId: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,26 +36,69 @@ class RegisterActivity : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
-        loadDepartments()
+        loadCatalog()
     }
 
-    private fun loadDepartments() {
+    private fun loadCatalog() {
         lifecycleScope.launch {
             try {
-                val response = ApiClient.api.departments()
+                val response = ApiClient.api.faculties()
                 if (response.isSuccessful && response.body() != null) {
-                    departments.clear()
-                    departments.addAll(response.body()!!.departments)
-                    val names = departments.map { it.deptName }
-                    binding.spinnerDepartment.adapter =
-                        ArrayAdapter(this@RegisterActivity, android.R.layout.simple_spinner_item, names)
-                            .apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+                    val body = response.body()!!
+                    faculties.clear()
+                    faculties.addAll(body.faculties)
+                    allDepartments.clear()
+                    allDepartments.addAll(body.departments)
+
+                    binding.spinnerFaculty.adapter = ArrayAdapter(
+                        this@RegisterActivity,
+                        android.R.layout.simple_spinner_item,
+                        faculties.map { it.facultyName },
+                    ).apply {
+                        setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    }
+                    binding.spinnerFaculty.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(
+                            parent: android.widget.AdapterView<*>?,
+                            view: android.view.View?,
+                            position: Int,
+                            id: Long,
+                        ) {
+                            selectedFacultyId = faculties.getOrNull(position)?.facultyId
+                            rebindDepartments()
+                        }
+
+                        override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
+                    }
+                } else {
+                    Toast.makeText(this@RegisterActivity, R.string.faculty_departments_not_loaded, Toast.LENGTH_LONG).show()
                 }
             } catch (_: Exception) {
-                // Departments remain empty; validation will catch it on submit.
+                Toast.makeText(this@RegisterActivity, R.string.faculty_departments_not_loaded, Toast.LENGTH_LONG).show()
             }
         }
     }
+
+    private fun rebindDepartments() {
+        val facultyId = selectedFacultyId
+        val departments = if (facultyId == null) {
+            emptyList<Department>()
+        } else {
+            allDepartments.filter { it.facultyId == facultyId }
+        }
+        binding.spinnerDepartment.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            departments.map { it.deptName },
+        ).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        selectedDepartmentId = departments.getOrNull(0)?.deptId
+        boundDepartments = departments
+    }
+
+    private var boundDepartments: List<Department> = emptyList()
+    private var selectedDepartmentId: Int? = null
 
     private fun attemptRegister() {
         val fullName = binding.etFullName.text?.toString()?.trim().orEmpty()
@@ -60,9 +106,15 @@ class RegisterActivity : AppCompatActivity() {
         val email = binding.etEmail.text?.toString()?.trim().orEmpty()
         val password = binding.etPassword.text?.toString()
         val confirm = binding.etConfirmPassword.text?.toString()
-        val deptIndex = binding.spinnerDepartment.selectedItemPosition
+        val facultyId = selectedFacultyId
+        val deptId = if (binding.spinnerDepartment.adapter != null && binding.spinnerDepartment.adapter!!.count > 0) {
+            boundDepartments.getOrNull(binding.spinnerDepartment.selectedItemPosition)?.deptId
+                ?: selectedDepartmentId
+        } else {
+            null
+        }
 
-        if (fullName.isEmpty() || matricNo.isEmpty() || email.isEmpty()) {
+        if (fullName.isEmpty() || matricNo.isEmpty() || email.isEmpty() || facultyId == null || deptId == null) {
             Toast.makeText(this, R.string.field_required, Toast.LENGTH_SHORT).show()
             return
         }
@@ -74,13 +126,8 @@ class RegisterActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.password_mismatch, Toast.LENGTH_SHORT).show()
             return
         }
-        if (departments.isEmpty() || deptIndex < 0) {
-            Toast.makeText(this, R.string.departments_not_loaded, Toast.LENGTH_SHORT).show()
-            return
-        }
 
         binding.btnRegister.isEnabled = false
-        val deptId = departments[deptIndex].deptId
         lifecycleScope.launch {
             try {
                 val response = ApiClient.api.register(
@@ -88,6 +135,7 @@ class RegisterActivity : AppCompatActivity() {
                         matricNo = matricNo,
                         fullName = fullName,
                         email = email,
+                        facultyId = facultyId,
                         departmentId = deptId,
                         password = password,
                         level = null,

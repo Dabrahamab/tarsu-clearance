@@ -25,6 +25,9 @@
             android:name=".OfficerDashboardActivity"
             android:exported="false" />
         <activity
+            android:name=".AdminDashboardActivity"
+            android:exported="false" />
+        <activity
             android:name=".auth.RegisterActivity"
             android:exported="false" />
         <activity

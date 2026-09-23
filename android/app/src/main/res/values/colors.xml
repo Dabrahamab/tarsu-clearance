@@ -8,4 +8,13 @@
     <color name="error">#B00020</color>
     <color name="success">#2E7D32</color>
     <color name="white">#FFFFFF</color>
+
+    <!-- Per-unit clearance status colors -->
+    <color name="status_approved">#2E7D32</color>
+    <color name="status_pending">#F9A825</color>
+    <color name="status_action_required">#EF6C00</color>
+    <color name="status_book_overdue">#D84315</color>
+    <color name="status_rejected">#B00020</color>
+    <color name="status_failed">#B00020</color>
+    <color name="status_completed">#2E7D32</color>
 </resources>

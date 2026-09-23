@@ -9,11 +9,11 @@ function normalizeUsername(input = '') {
 }
 
 async function registerStudent(req, res) {
-  const { matricNo, fullName, email, departmentId, password, level } = req.body;
+  const { matricNo, fullName, email, facultyId, departmentId, password, level } = req.body;
 
-  if (!matricNo || !fullName || !email || !departmentId || !password) {
+  if (!matricNo || !fullName || !email || !facultyId || !departmentId || !password) {
     return res.status(400).json({
-      error: 'matricNo, fullName, email, departmentId and password are required.',
+      error: 'matricNo, fullName, email, facultyId, departmentId and password are required.',
     });
   }
   if (!EMAIL_RE.test(email)) {
@@ -26,9 +26,13 @@ async function registerStudent(req, res) {
   const normEmail = normalizeUsername(email);
   const normMatric = normalizeUsername(matricNo);
 
+  const faculty = await queries.findFacultyById(Number(facultyId));
+  if (!faculty) {
+    return res.status(400).json({ error: 'Invalid facultyId.' });
+  }
   const dept = await queries.findDeptById(Number(departmentId));
-  if (!dept) {
-    return res.status(400).json({ error: 'Invalid departmentId.' });
+  if (!dept || Number(dept.faculty_id) !== Number(facultyId)) {
+    return res.status(400).json({ error: 'The selected department does not belong to that faculty.' });
   }
 
   const [existingUser, existingMatric] = await Promise.all([
@@ -98,9 +102,10 @@ async function me(req, res) {
   return res.json({ user: req.user });
 }
 
-async function listDepartments(req, res) {
-  const departments = await queries.listDepartments();
-  return res.json({ departments });
+async function listFaculties(req, res) {
+  const faculties = await queries.listFaculties();
+  const departments = await queries.listAllDepartments();
+  return res.json({ faculties, departments });
 }
 
-module.exports = { registerStudent, login, me, listDepartments };
+module.exports = { registerStudent, login, me, listFaculties };
