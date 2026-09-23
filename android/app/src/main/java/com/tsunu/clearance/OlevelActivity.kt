@@ -1,9 +1,11 @@
 package com.tsunu.clearance
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.tsunu.clearance.databinding.ActivityOlevelBinding
@@ -12,12 +14,24 @@ import com.tsunu.clearance.network.models.ApiError
 import com.tsunu.clearance.network.models.OlevelVerifyRequest
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 
 class OlevelActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityOlevelBinding
     private val examBodies = arrayOf("WAEC", "NECO", "NABTEB")
+    private var selectedFile: File? = null
+
+    private val pickFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        uri?.let { copyToCache("olevel_${System.currentTimeMillis()}.pdf", it) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +44,63 @@ class OlevelActivity : AppCompatActivity() {
                 .apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
 
         binding.btnVerify.setOnClickListener { attemptVerify() }
+        binding.btnUpload.setOnClickListener {
+            if (selectedFile == null) {
+                pickFile.launch(arrayOf("application/pdf", "image/*"))
+            } else {
+                uploadSelected()
+            }
+        }
+    }
+
+    private fun copyToCache(displayName: String, uri: Uri) {
+        try {
+            val file = File(cacheDir, displayName)
+            val input: InputStream? = contentResolver.openInputStream(uri)
+            input?.use { ins ->
+                FileOutputStream(file).use { outs -> ins.copyTo(outs) }
+            }
+            selectedFile = file
+            binding.tvUploadState.text = getString(R.string.olevel_file_ready, displayName)
+            binding.btnUpload.text = getString(R.string.olevel_upload_now)
+        } catch (e: Exception) {
+            Toast.makeText(this, e.message ?: getString(R.string.olevel_upload_failed), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun uploadSelected() {
+        val file = selectedFile ?: run {
+            Toast.makeText(this, R.string.olevel_no_file, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val token = SessionManager.token(this)
+        if (token == null) {
+            Toast.makeText(this, R.string.olevel_login_required, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        binding.btnUpload.isEnabled = false
+        binding.tvUploadState.text = getString(R.string.olevel_uploading)
+        val mime = "application/pdf".toMediaType()
+        val part = MultipartBody.Part.createFormData("file", file.name, file.asRequestBody(mime))
+        val docType = "OLEVEL".toRequestBody("text/plain".toMediaType())
+
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.api.uploadDocument("Bearer $token", part, docType)
+                if (response.isSuccessful && response.body() != null) {
+                    binding.tvUploadState.text = getString(R.string.olevel_upload_done)
+                    Toast.makeText(this@OlevelActivity, R.string.olevel_upload_done, Toast.LENGTH_SHORT).show()
+                } else {
+                    val err = parseError(response.code(), response.errorBody()?.string())
+                    binding.tvUploadState.text = err
+                }
+            } catch (e: Exception) {
+                binding.tvUploadState.text = e.message ?: getString(R.string.network_error)
+            } finally {
+                binding.btnUpload.isEnabled = true
+            }
+        }
     }
 
     private fun attemptVerify() {

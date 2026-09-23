@@ -45,6 +45,22 @@
         android:text="@string/verify_olevel" />
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/my_progress" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnOfficerDashboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/primary"
+        android:text="@string/officer_dashboard_button"
+        android:visibility="gone" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnLogout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

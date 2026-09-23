@@ -9,7 +9,7 @@ REM  Usage:  build-phone.bat  or  build-phone.bat 192.168.1.50
 REM -----------------------------------------------
 
 set IP=%~1
-if "%IP%"=="" set IP=192.168.1.153
+if "%IP%"=="" set IP=10.145.253.34
 
 set JAVA_HOME=C:\Program Files\Microsoft\jdk-17.0.20.101-hotspot
 set PATH=%JAVA_HOME%\bin;%PATH%

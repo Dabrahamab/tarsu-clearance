@@ -4,6 +4,7 @@ const {
   authorize,
 } = require('../middleware/auth');
 const olevelController = require('../controllers/olevelController');
+const { uploadMiddleware } = require('../middleware/upload');
 
 /**
  * @swagger
@@ -133,6 +134,45 @@ router.patch(
   authenticate,
   authorize('OFFICER', 'ADMIN'),
   olevelController.confirmVerification
+);
+
+/**
+ * @swagger
+ * /api/olevel/upload:
+ *   post:
+ *     tags: [O'Level]
+ *     summary: Upload an O'Level document (STUDENT)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: Document uploaded
+ *       400:
+ *         description: No file provided
+ */
+router.post(
+  '/upload',
+  authenticate,
+  authorize('STUDENT'),
+  uploadMiddleware.single('file'),
+  olevelController.uploadDocument
+);
+
+router.get(
+  '/documents',
+  authenticate,
+  authorize('STUDENT'),
+  olevelController.listMyDocuments
 );
 
 module.exports = router;

@@ -39,6 +39,45 @@
     <string name="sprint_line">Sprint 1 — authentication connected to the clearance API.</string>
     <string name="logout">Logout</string>
     <string name="verify_olevel">Verify O\'Level Result</string>
+    <string name="my_progress">My Clearance Progress</string>
+    <string name="officer_dashboard_button">Officer / Admin Dashboard</string>
+
+    <!-- O'Level upload -->
+    <string name="olevel_upload">Upload O\'Level Document</string>
+    <string name="olevel_uploading">Uploading…</string>
+    <string name="olevel_upload_done">Document uploaded successfully</string>
+    <string name="olevel_upload_failed">Upload failed. Please try again.</string>
+    <string name="olevel_no_file">Choose a file first</string>
+    <string name="olevel_file_ready">Ready: %1$s — tap Upload to send</string>
+    <string name="olevel_upload_now">Upload Now</string>
+
+    <!-- Progress -->
+    <string name="progress_title">Clearance Progress</string>
+    <string name="progress_overall">Clearance progress</string>
+    <string name="progress_overall_status">Overall status: %1$s</string>
+    <string name="progress_ref">Reference: %1$s</string>
+    <string name="progress_steps">Department / office approvals:</string>
+    <string name="progress_documents">Uploaded documents:</string>
+    <string name="progress_apply">Start My Clearance</string>
+    <string name="progress_refresh">Refresh</string>
+    <string name="progress_not_started">You have not started your clearance yet.</string>
+    <string name="progress_no_approvals">No approval steps yet — start your clearance to generate them.</string>
+    <string name="progress_no_documents">No documents uploaded yet.</string>
+
+    <!-- Officer dashboard -->
+    <string name="dashboard_title">Officer / Admin Dashboard</string>
+    <string name="dashboard_search_hint">Search matric number or name</string>
+    <string name="dashboard_search">Search</string>
+    <string name="dashboard_load_all">Load all clearances</string>
+    <string name="dashboard_search_required">Enter a matric number or name to search</string>
+    <string name="dashboard_no_students">No students matched your search.</string>
+    <string name="dashboard_clearances_empty">No clearances yet.</string>
+    <string name="dashboard_approve">Approve</string>
+    <string name="dashboard_reject">Reject</string>
+    <string name="dashboard_default_reject_note">Rejected by officer</string>
+    <string name="dashboard_stamped">Approval marked: %1$s</string>
+    <string name="dashboard_open_student">%1$s</string>
+    <string name="dashboard_no_clearance_for">%1$s has not started their clearance yet.</string>
 
     <!-- O'Level -->
     <string name="olevel_title">O\'Level Verification</string>

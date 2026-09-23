@@ -2,6 +2,7 @@ package com.tsunu.clearance
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.tsunu.clearance.auth.LoginActivity
@@ -29,6 +30,18 @@ class MainActivity : AppCompatActivity() {
         binding.btnVerifyOlevel.setOnClickListener {
             startActivity(Intent(this, OlevelActivity::class.java))
         }
+
+        binding.btnProgress.setOnClickListener {
+            startActivity(Intent(this, ProgressActivity::class.java))
+        }
+
+        binding.btnOfficerDashboard.setOnClickListener {
+            startActivity(Intent(this, OfficerDashboardActivity::class.java))
+        }
+
+        val role = SessionManager.role(this)
+        binding.btnOfficerDashboard.visibility =
+            if (role == "STUDENT") View.GONE else View.VISIBLE
 
         // Sprint 3: replace placeholder with the live clearance status tracker,
         // O'Level verification status, and document uploads.

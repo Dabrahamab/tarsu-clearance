@@ -46,13 +46,17 @@ async function submitVerification(req, res, next) {
       });
     }
 
-    // Call the (mock) provider gateway.
-    const raw = await fetchResult({
-      examBody: check.normalized.examBody,
-      examNumber: check.normalized.examNumber,
-      examYear,
-      cardPinSerial: check.normalized.cardPinSerial,
-    });
+    // Call the (mock) provider gateway. The result is keyed to the account
+    // owner's own name so a student can only ever verify their own result.
+    const raw = await fetchResult(
+      {
+        examBody: check.normalized.examBody,
+        examNumber: check.normalized.examNumber,
+        examYear,
+        cardPinSerial: check.normalized.cardPinSerial,
+      },
+      { expectedName: req.user.full_name }
+    );
 
     // Normalise into the JSON payload that is stored + returned to the client.
     const normalized = parseResult(raw);
@@ -130,6 +134,45 @@ async function getVerification(req, res, next) {
 }
 
 // ---------------------------------------------------------------------------
+// POST /api/olevel/upload                (STUDENT — document upload)
+// GET  /api/olevel/documents             (STUDENT — own uploaded documents)
+// ---------------------------------------------------------------------------
+async function uploadDocument(req, res, next) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No document file was provided.' });
+    }
+    const studentId = req.user.user_id; // students.student_id === users.user_id
+    const docType = (req.body && req.body.docType) || 'OLEVEL';
+    const inserted = await q.createDocument({
+      studentId,
+      docType,
+      filePath: req.file.filename,
+      mimeType: req.file.mimetype,
+    });
+    res.status(201).json({
+      docId: inserted.insertId,
+      docType,
+      fileName: req.file.filename,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+      message: 'Document uploaded successfully.',
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function listMyDocuments(req, res, next) {
+  try {
+    const rows = await q.listDocumentsByStudent(req.user.user_id);
+    res.json({ documents: rows });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // PATCH /api/olevel/verifications/:verifyId/confirm  (OFFICER/ADMIN)
 // ---------------------------------------------------------------------------
 async function confirmVerification(req, res, next) {
@@ -160,4 +203,6 @@ module.exports = {
   listStudentVerifications,
   getVerification,
   confirmVerification,
+  uploadDocument,
+  listMyDocuments,
 };

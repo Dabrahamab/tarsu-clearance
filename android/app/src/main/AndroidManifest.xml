@@ -19,6 +19,12 @@
             android:name=".OlevelActivity"
             android:exported="false" />
         <activity
+            android:name=".ProgressActivity"
+            android:exported="false" />
+        <activity
+            android:name=".OfficerDashboardActivity"
+            android:exported="false" />
+        <activity
             android:name=".auth.RegisterActivity"
             android:exported="false" />
         <activity

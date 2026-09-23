@@ -94,7 +94,12 @@ function fetchResult({ examBody, examNumber, examYear, cardPinSerial }, opts = {
         const candidateName = opts.expectedName
           ? String(opts.expectedName).trim().toUpperCase()
           : candidates[Math.floor(random() * candidates.length)];
-        const providerName = candidates[Math.floor(random() * candidates.length)];
+        // The provider returns the candidate the credential governs. In dev we
+        // key it to the supplied student name so verification always yields the
+        // account owner's own result (name-match flag drives the check).
+        const providerName = opts.expectedName
+          ? String(opts.expectedName).trim().toUpperCase()
+          : candidates[Math.floor(random() * candidates.length)];
         const nameMatched = candidateName === providerName;
 
         const pass = !alwaysReject && random() > 0.04;

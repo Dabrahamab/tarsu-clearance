@@ -5,7 +5,10 @@ const swaggerSpec = require('./config/swagger');
 const authRoutes = require('./routes/authRoutes');
 const departmentsRoutes = require('./routes/departmentsRoutes');
 const olevelRoutes = require('./routes/olevelRoutes');
+const clearanceRoutes = require('./routes/clearanceRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const { initDatabase, queries, DRIVER } = require('./config/db');
+const { UPLOAD_DIR } = require('./middleware/upload');
 
 const DEFAULT_DEPARTMENTS = [
   { name: 'Computer Science Department', type: 'DEPARTMENT', order: 1 },
@@ -38,6 +41,11 @@ async function bootstrap() {
   app.use('/api/auth', authRoutes);
   app.use('/api', departmentsRoutes);
   app.use('/api/olevel', olevelRoutes);
+  app.use('/api/clearance', clearanceRoutes);
+  app.use('/api/admin', adminRoutes);
+
+  // Serve uploaded documents (student O'Level files etc.).
+  app.use('/uploads', express.static(UPLOAD_DIR));
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   // 404
@@ -47,7 +55,8 @@ async function bootstrap() {
   app.use((err, req, res, next) => {
     console.error(err);
     const message = err.message || 'Internal server error.';
-    const code = /duplicate/i.test(message) ? 409 : 500;
+    let code = /duplicate/i.test(message) ? 409 : 500;
+    if (err.name === 'MulterError') code = 400; // e.g. LIMIT_FILE_SIZE
     res.status(code).json({ error: message });
   });
 

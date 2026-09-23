@@ -339,6 +339,123 @@ const queries = {
        WHERE verify_id = ?`,
       [status, resultPayload || null, verifyId]
     ),
+
+  // -------------------------------------------------------------------------
+  // Documents / uploads (Sprint 3 — blueprint §4-A, §6 uploads)
+  // -------------------------------------------------------------------------
+  createDocument: (d) =>
+    insert(
+      `INSERT INTO documents (student_id, doc_type, file_path, mime_type) VALUES (?, ?, ?, ?)`,
+      [d.studentId, d.docType, d.filePath, d.mimeType || null]
+    ),
+  listDocumentsByStudent: (studentId) =>
+    run(
+      `SELECT doc_id, student_id, doc_type, file_path, mime_type, uploaded_at
+       FROM documents
+       WHERE student_id = ?
+       ORDER BY uploaded_at DESC`,
+      [studentId]
+    ),
+
+  // -------------------------------------------------------------------------
+  // Clearance requests + department approvals (Sprint 3 — blueprint §4-C)
+  // -------------------------------------------------------------------------
+  createClearanceRequest: (c) =>
+    insert(
+      `INSERT INTO clearance_requests (student_id, overall_status, submitted_at, clearance_ref)
+       VALUES (?, ?, ?, ?)`,
+      [c.studentId, 'IN_PROGRESS', c.submittedAt, c.clearanceRef]
+    ),
+  findClearanceByStudent: (studentId) =>
+    runSingle(
+      `SELECT clearance_id, student_id, overall_status, submitted_at, completed_at, clearance_ref
+       FROM clearance_requests
+       WHERE student_id = ?`,
+      [studentId]
+    ),
+  findClearanceById: (clearanceId) =>
+    runSingle(
+      `SELECT c.clearance_id, c.student_id, c.overall_status, c.submitted_at, c.completed_at, c.clearance_ref,
+              s.matric_no, s.full_name, s.email, s.level, s.department_id, d.dept_name
+       FROM clearance_requests c
+       LEFT JOIN students s ON s.student_id = c.student_id
+       LEFT JOIN departments d ON d.dept_id = s.department_id
+       WHERE c.clearance_id = ?`,
+      [clearanceId]
+    ),
+  ensureApprovalRows: (clearanceId, deptIds) =>
+    Promise.all(
+      deptIds.map((deptId) =>
+        run(
+          `INSERT INTO clearance_department_approvals (clearance_id, dept_id, status)
+           VALUES (?, ?, 'PENDING')`,
+          [clearanceId, deptId]
+        ).catch(() => null)
+      )
+    ),
+  listApprovalsByClearance: (clearanceId) =>
+    run(
+      `SELECT a.approval_id, a.clearance_id, a.dept_id, a.status, a.remarks, a.approved_by_user_id, a.updated_at,
+              d.dept_name, d.dept_type
+       FROM clearance_department_approvals a
+       LEFT JOIN departments d ON d.dept_id = a.dept_id
+       WHERE a.clearance_id = ?
+       ORDER BY d.sort_order ASC`,
+      [clearanceId]
+    ),
+  listClearances: () =>
+    run(
+      `SELECT c.clearance_id, c.student_id, c.overall_status, c.submitted_at, c.completed_at, c.clearance_ref,
+              s.matric_no, s.full_name AS student_name, s.email AS student_email,
+              d.dept_name AS department_name
+       FROM clearance_requests c
+       LEFT JOIN students s ON s.student_id = c.student_id
+       LEFT JOIN departments d ON d.dept_id = s.department_id
+       ORDER BY c.submitted_at DESC`
+    ),
+  updateApprovalStatus: (clearanceId, deptId, { status, remarks, approvedByUserId }) =>
+    run(
+      `UPDATE clearance_department_approvals
+       SET status = ?, remarks = ?, approved_by_user_id = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE clearance_id = ? AND dept_id = ?`,
+      [status, remarks || null, approvedByUserId, clearanceId, deptId]
+    ),
+  updateClearanceStatus: (clearanceId, { overallStatus, completedAt }) => {
+    if (DRIVER === 'sqlite') {
+      return run(
+        `UPDATE clearance_requests SET overall_status = ?, completed_at = ?
+         WHERE clearance_id = ?`,
+        [overallStatus, completedAt || null, clearanceId]
+      );
+    }
+    return run(
+      `UPDATE clearance_requests
+       SET overall_status = ?, completed_at = ?
+       WHERE clearance_id = ?`,
+      [overallStatus, completedAt || null, clearanceId]
+    );
+  },
+  findStudentByIdWithDept: (studentId) =>
+    runSingle(
+      `SELECT s.student_id, s.matric_no, s.full_name, s.email, s.department_id, s.level, s.created_at,
+              d.dept_name
+       FROM students s
+       LEFT JOIN departments d ON d.dept_id = s.department_id
+       WHERE s.student_id = ?`,
+      [studentId]
+    ),
+  searchStudentsByMatric: (term) =>
+    run(
+      `SELECT s.student_id, s.matric_no, s.full_name, s.email, s.department_id, s.level, s.created_at,
+              d.dept_name
+       FROM students s
+       LEFT JOIN departments d ON d.dept_id = s.department_id
+       WHERE s.matric_no LIKE ? OR s.full_name LIKE ? OR s.email LIKE ?
+       ORDER BY s.full_name ASC
+       LIMIT 50`,
+      [`%${term}%`, `%${term}%`, `%${term}%`]
+    ),
 };
 
 module.exports = { DRIVER, initDatabase, run, runSingle, insert, queries };

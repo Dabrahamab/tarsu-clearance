@@ -2,6 +2,7 @@
 node_modules/
 backend/.env
 backend/data/
+backend/uploads/
 npm-debug.log*
 
 # Python / any local caches
