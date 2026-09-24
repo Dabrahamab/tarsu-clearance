@@ -95,9 +95,7 @@ function Get-AppPath($forPhone) {
     # No build output yet: build one for the target device.
     Write-Host "      no APK found - building (first run, ~1 min)..." -ForegroundColor Yellow
     if ($forPhone) {
-        $ip = (Get-NetIPAddress -AddressFamily IPv4 -AddressState Preferred | Where-Object { $_.IPAddress -like "10.*" } | Select-Object -First 1).IPAddress
-        if (-not $ip) { $ip = "10.0.2.2" }
-        $baseUrl = "http://${ip}:5000/"
+        $baseUrl = "https://tarsu-clearance-api.onrender.com/"
     } else {
         $baseUrl = "http://10.0.2.2:5000/"
     }
