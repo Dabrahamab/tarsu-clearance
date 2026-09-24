@@ -5,6 +5,8 @@ import com.tsunu.clearance.network.models.CatalogCreateRequest
 import com.tsunu.clearance.network.models.CatalogCreateResponse
 import com.tsunu.clearance.network.models.ClearanceDetailResponse
 import com.tsunu.clearance.network.models.ClearanceListResponse
+import com.tsunu.clearance.network.models.CreateStaffRequest
+import com.tsunu.clearance.network.models.CreateStaffResponse
 import com.tsunu.clearance.network.models.DocumentsResponse
 import com.tsunu.clearance.network.models.FacultiesResponse
 import com.tsunu.clearance.network.models.LoginRequest
@@ -14,6 +16,9 @@ import com.tsunu.clearance.network.models.OlevelVerificationsResponse
 import com.tsunu.clearance.network.models.OlevelVerifyRequest
 import com.tsunu.clearance.network.models.OlevelVerifyResponse
 import com.tsunu.clearance.network.models.RegisterRequest
+import com.tsunu.clearance.network.models.ResetPasswordRequest
+import com.tsunu.clearance.network.models.ResetPasswordResponse
+import com.tsunu.clearance.network.models.StaffListResponse
 import com.tsunu.clearance.network.models.StampRequest
 import com.tsunu.clearance.network.models.StudentsResponse
 import com.tsunu.clearance.network.models.UploadDocumentResponse
@@ -111,4 +116,22 @@ interface ClearanceApi {
         @Header("Authorization") token: String,
         @Body body: CatalogCreateRequest,
     ): Response<CatalogCreateResponse>
+
+    @GET("api/admin/staff")
+    suspend fun listStaff(
+        @Header("Authorization") token: String,
+    ): Response<StaffListResponse>
+
+    @POST("api/admin/staff")
+    suspend fun createStaff(
+        @Header("Authorization") token: String,
+        @Body body: CreateStaffRequest,
+    ): Response<CreateStaffResponse>
+
+    @PATCH("api/admin/staff/{staffId}/password")
+    suspend fun resetStaffPassword(
+        @Header("Authorization") token: String,
+        @Path("staffId") staffId: Long,
+        @Body body: ResetPasswordRequest,
+    ): Response<ResetPasswordResponse>
 }

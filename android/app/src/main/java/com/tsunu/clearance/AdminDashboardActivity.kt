@@ -1,9 +1,12 @@
 package com.tsunu.clearance
 
 import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -12,9 +15,13 @@ import com.tsunu.clearance.databinding.ActivityAdminDashboardBinding
 import com.tsunu.clearance.network.ApiClient
 import com.tsunu.clearance.network.models.ApiError
 import com.tsunu.clearance.network.models.CatalogCreateRequest
+import com.tsunu.clearance.network.models.CreateStaffRequest
+import com.tsunu.clearance.network.models.Department
 import com.tsunu.clearance.network.models.Faculty
 import com.tsunu.clearance.network.models.OlevelStatusUpdateRequest
 import com.tsunu.clearance.network.models.OlevelVerificationItem
+import com.tsunu.clearance.network.models.ResetPasswordRequest
+import com.tsunu.clearance.network.models.StaffMember
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -23,6 +30,8 @@ class AdminDashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAdminDashboardBinding
     private val faculties = mutableListOf<Faculty>()
+    private val departments = mutableListOf<Department>()
+    private val staffList = mutableListOf<StaffMember>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,8 +42,27 @@ class AdminDashboardActivity : AppCompatActivity() {
         binding.btnCreateDept.setOnClickListener { createDepartment() }
         binding.btnCreateUnit.setOnClickListener { createUnit() }
         binding.btnLoadRecords.setOnClickListener { loadRecords() }
+        binding.btnCreateHod.setOnClickListener { createStaff() }
+        binding.btnResetStaffPassword.setOnClickListener { resetStaffPassword() }
+
+        binding.spinnerHodRole.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            listOf("HOD", "OFFICER"),
+        ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+
+        binding.spinnerAdminFaculty.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                refreshHodDeptSpinner(faculties.getOrNull(position)?.facultyId)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                refreshHodDeptSpinner(null)
+            }
+        }
 
         loadFaculties()
+        loadStaff()
     }
 
     private fun token(): String? {
@@ -48,6 +76,8 @@ class AdminDashboardActivity : AppCompatActivity() {
             try {
                 val r = ApiClient.api.faculties()
                 if (r.isSuccessful && r.body() != null) {
+                    departments.clear()
+                    departments.addAll(r.body()!!.departments)
                     faculties.clear()
                     faculties.addAll(r.body()!!.faculties)
                     binding.spinnerAdminFaculty.adapter = ArrayAdapter(
@@ -60,6 +90,27 @@ class AdminDashboardActivity : AppCompatActivity() {
                 Toast.makeText(this@AdminDashboardActivity, R.string.faculty_departments_not_loaded, Toast.LENGTH_LONG).show()
             }
         }
+    }
+
+    private fun refreshHodDeptSpinner(facultyId: Int?) {
+        val depts = departments.filter { it.facultyId == facultyId }
+        binding.spinnerHodDept.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            listOf(getString(R.string.admin_staff_dept_hint)) + depts.map { it.deptName },
+        ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+    }
+
+    private fun selectedDeptId(): Long? {
+        if (spinnerAtHint(binding.spinnerHodDept)) return null
+        val facultyId = faculties.getOrNull(binding.spinnerAdminFaculty.selectedItemPosition)?.facultyId
+        val name = binding.spinnerHodDept.selectedItem?.toString()
+        return departments.firstOrNull { it.facultyId == facultyId && it.deptName == name }?.deptId?.toLong()
+    }
+
+    private fun spinnerAtHint(spinner: Spinner): Boolean {
+        val first = spinner.adapter?.getItem(0)?.toString()
+        return spinner.selectedItem != null && spinner.selectedItem.toString() == first
     }
 
     private fun createDepartment() {
@@ -125,6 +176,101 @@ class AdminDashboardActivity : AppCompatActivity() {
                 Toast.makeText(this@AdminDashboardActivity, e.message ?: getString(R.string.network_error), Toast.LENGTH_LONG).show()
             } finally {
                 binding.btnCreateUnit.isEnabled = true
+            }
+        }
+    }
+
+    private fun createStaff() {
+        val token = token() ?: return
+        val role = binding.spinnerHodRole.selectedItem?.toString() ?: "HOD"
+        val fullName = binding.etHodName.text?.toString()?.trim().orEmpty()
+        val email = binding.etHodEmail.text?.toString()?.trim().orEmpty()
+        val password = binding.etHodPassword.text?.toString().orEmpty()
+        val departmentId = if (role == "HOD") selectedDeptId() else null
+        if (fullName.isEmpty() || email.isEmpty() || password.length < 8 || (role == "HOD" && departmentId == null)) {
+            Toast.makeText(this, R.string.admin_required, Toast.LENGTH_SHORT).show()
+            return
+        }
+        binding.btnCreateHod.isEnabled = false
+        lifecycleScope.launch {
+            try {
+                val r = ApiClient.api.createStaff(
+                    "Bearer $token",
+                    CreateStaffRequest(role = role, fullName = fullName, email = email, password = password, departmentId = departmentId),
+                )
+                if (r.isSuccessful && r.body() != null) {
+                    Toast.makeText(
+                        this@AdminDashboardActivity,
+                        getString(R.string.admin_staff_created, r.body()!!.staff?.fullName ?: fullName, role),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                    binding.etHodName.text?.clear()
+                    binding.etHodEmail.text?.clear()
+                    binding.etHodPassword.text?.clear()
+                    loadStaff()
+                } else {
+                    Toast.makeText(this@AdminDashboardActivity, parseError(r.code(), r.errorBody()?.string()), Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@AdminDashboardActivity, e.message ?: getString(R.string.network_error), Toast.LENGTH_LONG).show()
+            } finally {
+                binding.btnCreateHod.isEnabled = true
+            }
+        }
+    }
+
+    private fun loadStaff() {
+        val token = token() ?: return
+        lifecycleScope.launch {
+            try {
+                val r = ApiClient.api.listStaff("Bearer $token")
+                if (r.isSuccessful && r.body() != null) {
+                    staffList.clear()
+                    staffList.addAll(r.body()!!.staff)
+                    val labels = staffList.map { s ->
+                        "${s.fullName} (${s.role} — ${s.deptName ?: "No department"})"
+                    }
+                    binding.spinnerSelectStaff.adapter = ArrayAdapter(
+                        this@AdminDashboardActivity,
+                        android.R.layout.simple_spinner_item,
+                        if (labels.isEmpty()) listOf(getString(R.string.admin_no_staff)) else labels,
+                    ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+                } else {
+                    Toast.makeText(this@AdminDashboardActivity, parseError(r.code(), r.errorBody()?.string()), Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@AdminDashboardActivity, e.message ?: getString(R.string.network_error), Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun resetStaffPassword() {
+        val token = token() ?: return
+        val position = binding.spinnerSelectStaff.selectedItemPosition
+        val selected = staffList.getOrNull(position)
+        val password = binding.etStaffNewPassword.text?.toString().orEmpty()
+        if (selected == null || password.length < 8) {
+            Toast.makeText(this, R.string.admin_required, Toast.LENGTH_SHORT).show()
+            return
+        }
+        binding.btnResetStaffPassword.isEnabled = false
+        lifecycleScope.launch {
+            try {
+                val r = ApiClient.api.resetStaffPassword("Bearer $token", selected.userId, ResetPasswordRequest(password))
+                if (r.isSuccessful && r.body() != null) {
+                    Toast.makeText(
+                        this@AdminDashboardActivity,
+                        getString(R.string.admin_password_reset, selected.fullName),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                    binding.etStaffNewPassword.text?.clear()
+                } else {
+                    Toast.makeText(this@AdminDashboardActivity, parseError(r.code(), r.errorBody()?.string()), Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@AdminDashboardActivity, e.message ?: getString(R.string.network_error), Toast.LENGTH_LONG).show()
+            } finally {
+                binding.btnResetStaffPassword.isEnabled = true
             }
         }
     }

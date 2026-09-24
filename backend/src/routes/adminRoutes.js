@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const { authenticate, authorize } = require('../middleware/auth');
 const ctrl = require('../controllers/clearanceController');
+const staff = require('../controllers/staffController');
 
 const router = Router();
 
@@ -11,5 +12,10 @@ router.get('/students/search', authorize('OFFICER', 'HOD', 'ADMIN'), ctrl.search
 
 // Admin-only: register a new clearance unit, faculty or department.
 router.post('/catalog', authorize('ADMIN'), ctrl.createAdminCatalog);
+
+// Admin-only: HOD / officer account management (create + password reset).
+router.get('/staff', authorize('ADMIN'), staff.listStaff);
+router.post('/staff', authorize('ADMIN'), staff.createStaff);
+router.patch('/staff/:staffId/password', authorize('ADMIN'), staff.resetPassword);
 
 module.exports = router;

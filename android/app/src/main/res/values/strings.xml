@@ -149,4 +149,22 @@
     <string name="admin_updated">Record updated: %1$s</string>
     <string name="admin_required">All fields are required.</string>
     <string name="misc">Admin management — student entries are only editable by the admin.</string>
+
+    <!-- Admin dashboard: staff / HOD -->
+    <string name="admin_manage_staff">Manage HODs and officers</string>
+    <string name="admin_register_staff">Register new HOD / officer</string>
+    <string name="admin_staff_role_hint">Role</string>
+    <string name="admin_staff_name_hint">Full name</string>
+    <string name="admin_staff_email_hint">Email (e.g. hod2@tarsu.edu.ng)</string>
+    <string name="admin_staff_password_hint">Password (min 8 chars)</string>
+    <string name="admin_staff_dept_hint">Department (required for HOD)</string>
+    <string name="admin_add_staff">Add HOD / Officer</string>
+    <string name="admin_staff_created">Created %1$s (%2$s)</string>
+    <string name="admin_reset_staff_password">Reset HOD / officer password</string>
+    <string name="admin_select_staff_hint">Select HOD / officer</string>
+    <string name="admin_new_password_hint">New password (min 8 chars)</string>
+    <string name="admin_reset_password">Reset Password</string>
+    <string name="admin_password_reset">Password updated for %1$s</string>
+    <string name="admin_no_staff">No HODs or officers yet.</string>
+    <string name="admin_staff_loaded">%1$d staff account(s) loaded</string>
 </resources>

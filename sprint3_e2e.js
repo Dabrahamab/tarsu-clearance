@@ -221,6 +221,41 @@ async function seedStaff() {
   check('student blocked from /clearance/all => 403', blockAll.status === 403, { status: blockAll.status });
   check('student blocked from /admin search => 403', blockSearch.status === 403, { status: blockSearch.status });
 
+  // 12) admin manages HOD/officer accounts
+  const staffList = await send('GET', '/api/admin/staff', null, adminToken);
+  check('admin lists staff', staffList.status === 200 && staffList.json.staff.some((s) => s.role === 'OFFICER'), {
+    n: staffList.json.staff?.length,
+  });
+  const staffEmail = `hod${Date.now()}@tarsu.edu.ng`;
+  const mkStaff = await send('POST', '/api/admin/staff', {
+    role: 'HOD', fullName: 'Occupied HOD', email: staffEmail, password: 'HodNew123!', departmentId: cs.dept_id,
+  }, adminToken);
+  check('admin creates new HOD', mkStaff.status === 201 && mkStaff.json.staff.role === 'HOD', {
+    id: mkStaff.json.staff?.user_id,
+  });
+  const hodNoDept = await send('POST', '/api/admin/staff', {
+    role: 'HOD', fullName: 'HOD No Dept', email: `nd${Date.now()}@tarsu.edu.ng`, password: 'HodNew123!',
+  }, adminToken);
+  check('HOD without department => 400', hodNoDept.status === 400, { status: hodNoDept.status });
+  const newHodLogin = await send('POST', '/api/auth/login', { identifier: staffEmail, password: 'HodNew123!' });
+  check('new HOD can log in', newHodLogin.status === 200 && newHodLogin.json.user.role === 'HOD', {
+    dept: newHodLogin.json.user?.department_id,
+  });
+  const staffId = mkStaff.json.staff.user_id;
+  const reset = await send('PATCH', `/api/admin/staff/${staffId}/password`, { password: 'Changed123!' }, adminToken);
+  check('admin resets HOD password', reset.status === 200, { status: reset.status });
+  const oldPw = await send('POST', '/api/auth/login', { identifier: staffEmail, password: 'HodNew123!' });
+  const newPw = await send('POST', '/api/auth/login', { identifier: staffEmail, password: 'Changed123!' });
+  check('old password rejected, new password accepted', oldPw.status === 401 && newPw.status === 200, {
+    old: oldPw.status, new: newPw.status,
+  });
+  const officerBlocked = await send('POST', '/api/admin/staff', {
+    role: 'HOD', fullName: 'X', email: `x${Date.now()}@tarsu.edu.ng`, password: 'HodNew123!',
+  }, officerToken);
+  check('officer blocked from staff admin => 403', officerBlocked.status === 403, { status: officerBlocked.status });
+  const studentStaffBlock = await send('GET', '/api/admin/staff', null, studentToken);
+  check('student blocked from /admin/staff => 403', studentStaffBlock.status === 403, { status: studentStaffBlock.status });
+
   await close();
   const passed = results.filter((r) => r.ok).length;
   console.log(`\n== ${passed}/${results.length} passed ==`);

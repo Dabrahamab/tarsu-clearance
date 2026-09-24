@@ -598,6 +598,22 @@ const queries = {
        LIMIT 50`,
       [`%${term}%`, `%${term}%`, `%${term}%`]
     ),
+
+  // -------------------------------------------------------------------------
+  // Staff / HOD management (admin)
+  // -------------------------------------------------------------------------
+  listStaff: () =>
+    run(
+      `SELECT u.user_id, u.role, u.email, u.full_name, u.department_id, u.created_at,
+              d.dept_name, f.faculty_name
+       FROM users u
+       LEFT JOIN departments d ON d.dept_id = u.department_id
+       LEFT JOIN faculties f ON f.faculty_id = d.faculty_id
+       WHERE u.role IN ('HOD', 'OFFICER')
+       ORDER BY u.role ASC, u.full_name ASC`
+    ),
+  updateUserPassword: (userId, passwordHash) =>
+    run('UPDATE users SET password_hash = ? WHERE user_id = ?', [passwordHash, userId]),
 };
 
 module.exports = { DRIVER, initDatabase, run, runSingle, insert, queries };

@@ -1,0 +1,18 @@
+# Render Blueprint — one-click cloud deploy of the clearance API.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: tarsu-clearance-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DB_DRIVER
+        value: sqlite
+      - key: DB_FILE
+        value: data/devdb.sqlite
+      - key: JWT_SECRET
+        generateValue: true

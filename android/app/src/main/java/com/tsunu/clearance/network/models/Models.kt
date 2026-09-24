@@ -241,6 +241,43 @@ data class StudentsResponse(
     @SerializedName("students") val students: List<StudentProfile>,
 )
 
+data class StaffMember(
+    @SerializedName("user_id") val userId: Long,
+    @SerializedName("role") val role: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("full_name") val fullName: String,
+    @SerializedName("department_id") val departmentId: Long? = null,
+    @SerializedName("dept_name") val deptName: String? = null,
+    @SerializedName("faculty_name") val facultyName: String? = null,
+)
+
+data class StaffListResponse(
+    @SerializedName("staff") val staff: List<StaffMember> = emptyList(),
+)
+
+data class CreateStaffRequest(
+    @SerializedName("role") val role: String,
+    @SerializedName("fullName") val fullName: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("departmentId") val departmentId: Long? = null,
+)
+
+data class CreateStaffResponse(
+    @SerializedName("staff") val staff: StaffMember? = null,
+    @SerializedName("error") val error: String? = null,
+)
+
+data class ResetPasswordRequest(
+    @SerializedName("password") val password: String,
+)
+
+data class ResetPasswordResponse(
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("staff") val staff: StaffMember? = null,
+    @SerializedName("error") val error: String? = null,
+)
+
 data class StampRequest(
     @SerializedName("status") val status: String,
     @SerializedName("remarks") val remarks: String? = null,
