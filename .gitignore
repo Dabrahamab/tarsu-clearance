@@ -27,3 +27,8 @@ Thumbs.db
 .vscode/
 # IDE
 .idea/
+
+# build logs
+build-log.txt
+install-log.txt
+
