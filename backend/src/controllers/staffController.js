@@ -79,4 +79,24 @@ async function resetPassword(req, res) {
   return res.json({ message: 'Password updated successfully.', staff: { ...staff, password_hash: undefined } });
 }
 
-module.exports = { listStaff, createStaff, resetPassword };
+async function resetStudentPassword(req, res) {
+  const { password } = req.body;
+  if (typeof password !== 'string' || password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+  }
+
+  const user = await queries.findUserById(Number(req.params.studentId));
+  if (!user || user.role !== 'STUDENT') {
+    return res.status(404).json({ error: 'Student not found.' });
+  }
+  const student = await queries.findStudentByIdWithDept(user.user_id);
+  if (!student) {
+    return res.status(404).json({ error: 'Student profile not found.' });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  await queries.updateUserPassword(user.user_id, passwordHash);
+  return res.json({ message: 'Password updated successfully.', student });
+}
+
+module.exports = { listStaff, createStaff, resetPassword, resetStudentPassword };

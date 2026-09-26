@@ -22,6 +22,7 @@ import com.tsunu.clearance.network.models.OlevelStatusUpdateRequest
 import com.tsunu.clearance.network.models.OlevelVerificationItem
 import com.tsunu.clearance.network.models.ResetPasswordRequest
 import com.tsunu.clearance.network.models.StaffMember
+import com.tsunu.clearance.network.models.StudentProfile
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -32,6 +33,7 @@ class AdminDashboardActivity : AppCompatActivity() {
     private val faculties = mutableListOf<Faculty>()
     private val departments = mutableListOf<Department>()
     private val staffList = mutableListOf<StaffMember>()
+    private val students = mutableListOf<StudentProfile>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +46,8 @@ class AdminDashboardActivity : AppCompatActivity() {
         binding.btnLoadRecords.setOnClickListener { loadRecords() }
         binding.btnCreateHod.setOnClickListener { createStaff() }
         binding.btnResetStaffPassword.setOnClickListener { resetStaffPassword() }
+        binding.btnSearchStudents.setOnClickListener { searchStudents() }
+        binding.btnResetStudentPassword.setOnClickListener { resetStudentPassword() }
 
         binding.spinnerHodRole.adapter = ArrayAdapter(
             this,
@@ -271,6 +275,70 @@ class AdminDashboardActivity : AppCompatActivity() {
                 Toast.makeText(this@AdminDashboardActivity, e.message ?: getString(R.string.network_error), Toast.LENGTH_LONG).show()
             } finally {
                 binding.btnResetStaffPassword.isEnabled = true
+            }
+        }
+    }
+
+    private fun searchStudents() {
+        val token = token() ?: return
+        val q = binding.etStudentSearch.text?.toString()?.trim().orEmpty()
+        if (q.length < 2) {
+            Toast.makeText(this, R.string.admin_student_search_required, Toast.LENGTH_SHORT).show()
+            return
+        }
+        binding.btnSearchStudents.isEnabled = false
+        lifecycleScope.launch {
+            try {
+                val r = ApiClient.api.searchStudents("Bearer $token", q)
+                if (r.isSuccessful && r.body() != null) {
+                    students.clear()
+                    students.addAll(r.body()!!.students)
+                    val labels = students.map { s ->
+                        "${s.fullName ?: ""} · ${s.matricNo ?: ""} (${s.deptName ?: "?"})"
+                    }
+                    binding.spinnerSelectStudent.adapter = ArrayAdapter(
+                        this@AdminDashboardActivity,
+                        android.R.layout.simple_spinner_item,
+                        if (labels.isEmpty()) listOf(getString(R.string.admin_no_students)) else labels,
+                    ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+                } else {
+                    Toast.makeText(this@AdminDashboardActivity, parseError(r.code(), r.errorBody()?.string()), Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@AdminDashboardActivity, e.message ?: getString(R.string.network_error), Toast.LENGTH_LONG).show()
+            } finally {
+                binding.btnSearchStudents.isEnabled = true
+            }
+        }
+    }
+
+    private fun resetStudentPassword() {
+        val token = token() ?: return
+        val position = binding.spinnerSelectStudent.selectedItemPosition
+        val selected = students.getOrNull(position)
+        val password = binding.etStudentNewPassword.text?.toString().orEmpty()
+        if (selected?.studentId == null || password.length < 8) {
+            Toast.makeText(this, R.string.admin_required, Toast.LENGTH_SHORT).show()
+            return
+        }
+        binding.btnResetStudentPassword.isEnabled = false
+        lifecycleScope.launch {
+            try {
+                val r = ApiClient.api.resetStudentPassword("Bearer $token", selected.studentId, ResetPasswordRequest(password))
+                if (r.isSuccessful && r.body() != null) {
+                    Toast.makeText(
+                        this@AdminDashboardActivity,
+                        getString(R.string.admin_student_password_reset, selected.fullName ?: "", selected.matricNo ?: ""),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                    binding.etStudentNewPassword.text?.clear()
+                } else {
+                    Toast.makeText(this@AdminDashboardActivity, parseError(r.code(), r.errorBody()?.string()), Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@AdminDashboardActivity, e.message ?: getString(R.string.network_error), Toast.LENGTH_LONG).show()
+            } finally {
+                binding.btnResetStudentPassword.isEnabled = true
             }
         }
     }

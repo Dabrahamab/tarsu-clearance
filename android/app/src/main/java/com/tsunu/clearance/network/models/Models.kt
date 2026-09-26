@@ -275,6 +275,7 @@ data class ResetPasswordRequest(
 data class ResetPasswordResponse(
     @SerializedName("message") val message: String? = null,
     @SerializedName("staff") val staff: StaffMember? = null,
+    @SerializedName("student") val student: StudentProfile? = null,
     @SerializedName("error") val error: String? = null,
 )
 

@@ -29,7 +29,7 @@ const SUBJECTS = [
 async function seedStaff() {
   const { run, runSingle } = require(path.resolve(__dirname, 'backend', 'src', 'config', 'db'));
   const mk = (role, email, fullName, password, departmentId) => run(
-    `INSERT INTO users (role, email, full_name, password_hash, department_id)
+    `INSERT OR IGNORE INTO users (role, email, full_name, password_hash, department_id)
      VALUES (?, ?, ?, ?, ?)`,
     [role, email, fullName, bcrypt.hashSync(password, 10), departmentId || null]
   );
@@ -255,6 +255,24 @@ async function seedStaff() {
   check('officer blocked from staff admin => 403', officerBlocked.status === 403, { status: officerBlocked.status });
   const studentStaffBlock = await send('GET', '/api/admin/staff', null, studentToken);
   check('student blocked from /admin/staff => 403', studentStaffBlock.status === 403, { status: studentStaffBlock.status });
+
+  // 13) admin resetting a student password
+  const studentUserId = reg.json.user.user_id;
+  const resetStu = await send('PATCH', `/api/admin/students/${studentUserId}/password`, { password: 'NewStu4567!' }, adminToken);
+  check('admin resets student password', resetStu.status === 200 && resetStu.json.student?.student_id === studentUserId, {
+    status: resetStu.status, sid: resetStu.json.student?.student_id,
+  });
+  const oldStu = await send('POST', '/api/auth/login', { identifier: matric, password: 'Student123!' });
+  const newStu = await send('POST', '/api/auth/login', { identifier: matric, password: 'NewStu4567!' });
+  check('student old pw rejected, new pw accepted', oldStu.status === 401 && newStu.status === 200, {
+    old: oldStu.status, new: newStu.status,
+  });
+  const shortStu = await send('PATCH', `/api/admin/students/${studentUserId}/password`, { password: 'short' }, adminToken);
+  check('student reset short password => 400', shortStu.status === 400, { status: shortStu.status });
+  const officerStuReset = await send('PATCH', `/api/admin/students/${studentUserId}/password`, { password: 'NewStu4567!' }, officerToken);
+  check('officer blocked from student reset => 403', officerStuReset.status === 403, { status: officerStuReset.status });
+  const bogusStu = await send('PATCH', '/api/admin/students/999999999/password', { password: 'NewStu4567!' }, adminToken);
+  check('student reset unknown id => 404', bogusStu.status === 404, { status: bogusStu.status });
 
   await close();
   const passed = results.filter((r) => r.ok).length;

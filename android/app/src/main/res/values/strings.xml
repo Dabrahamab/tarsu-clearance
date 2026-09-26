@@ -167,4 +167,11 @@
     <string name="admin_password_reset">Password updated for %1$s</string>
     <string name="admin_no_staff">No HODs or officers yet.</string>
     <string name="admin_staff_loaded">%1$d staff account(s) loaded</string>
+    <string name="admin_reset_student_password">Reset student password</string>
+    <string name="admin_student_search_hint">Search by matric no, name or email</string>
+    <string name="admin_search_students">Search Students</string>
+    <string name="admin_select_student_hint">Select student</string>
+    <string name="admin_no_students">No students found.</string>
+    <string name="admin_student_search_required">Enter a name, matric no or email to search.</string>
+    <string name="admin_student_password_reset">Password reset for %1$s (%2$s)</string>
 </resources>
