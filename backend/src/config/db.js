@@ -305,7 +305,34 @@ function seedDevelopmentData() {
     sqlite.exec('ROLLBACK');
     throw err;
   }
-  return Promise.resolve();
+  return Promise.resolve(seedDemoUsers());
+}
+
+/**
+ * Ensure demo staff accounts exist on every boot (idempotent).
+ * Needed on fresh/cloud databases so admins, officers and HODs can log in.
+ */
+async function seedDemoUsers() {
+  const bcrypt = require('bcryptjs');
+  const demoUsers = [
+    { role: 'OFFICER', email: 'officer@tarsu.edu.ng', fullName: 'Clearance Officer', password: 'Officer123!' },
+    { role: 'ADMIN', email: 'admin@tarsu.edu.ng', fullName: 'System Administrator', password: 'Admin123' },
+    { role: 'HOD', email: 'hod@tarsu.edu.ng', fullName: 'Head of Department', password: 'Hod123!' },
+  ];
+  for (const u of demoUsers) {
+    const existing = sqlite.prepare('SELECT user_id FROM users WHERE LOWER(email) = ?').get(u.email.toLowerCase());
+    if (existing) continue;
+    const passwordHash = await bcrypt.hash(u.password, 10);
+    let departmentId = null;
+    if (u.role === 'HOD') {
+      const cs = sqlite.prepare('SELECT dept_id FROM departments WHERE LOWER(dept_name) = ?').get('computer science');
+      departmentId = cs ? cs.dept_id : null;
+    }
+    sqlite.prepare(
+      'INSERT INTO users (role, email, full_name, password_hash, department_id) VALUES (?, ?, ?, ?, ?)'
+    ).run(u.role, u.email.toLowerCase(), u.fullName, passwordHash, departmentId);
+    console.log(`[db] seeded demo ${u.role}: ${u.email}`);
+  }
 }
 
 /**
