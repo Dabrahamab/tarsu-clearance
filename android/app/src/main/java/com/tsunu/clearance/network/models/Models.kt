@@ -195,6 +195,7 @@ data class ApprovalItem(
 
 data class StudentProfile(
     @SerializedName("student_id") val studentId: Long? = null,
+    @SerializedName("user_id") val userId: Long? = null,
     @SerializedName("matric_no") val matricNo: String? = null,
     @SerializedName("full_name") val fullName: String? = null,
     @SerializedName("email") val email: String? = null,
@@ -202,6 +203,9 @@ data class StudentProfile(
     @SerializedName("level") val level: String? = null,
     @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("dept_name") val deptName: String? = null,
+    @SerializedName("faculty_id") val facultyId: Long? = null,
+    @SerializedName("faculty_name") val facultyName: String? = null,
+    @SerializedName("password") val password: String? = null,
 )
 
 data class ClearanceSummary(

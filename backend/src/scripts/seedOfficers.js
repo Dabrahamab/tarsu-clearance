@@ -9,20 +9,33 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
 const bcrypt = require('bcryptjs');
 const { initDatabase, run, runSingle, queries } = require('../config/db');
+const { encryptPassword } = require('../config/crypto');
 
 async function upsertUser({ role, email, fullName, password, departmentId }) {
   const existing = await queries.findUserByEmail(email);
   const passwordHash = await bcrypt.hash(password, 10);
+  const passwordEnc = encryptPassword(password);
   if (existing) {
     await run(
-      `UPDATE users SET role = ?, full_name = ?, password_hash = ?, department_id = ? WHERE user_id = ?`,
-      [role, fullName, passwordHash, departmentId || null, existing.user_id]
+      `UPDATE users SET role = ?, full_name = ?, password_hash = ?, pw_enc = ?, department_id = ? WHERE user_id = ?`,
+      [role, fullName, passwordHash, passwordEnc, departmentId || null, existing.user_id]
     );
     console.log(`[seed] updated ${role}: ${email}`);
     return;
   }
-  const inserted = await queries.createUser({ role, email, fullName, passwordHash, departmentId: departmentId || null });
+  const inserted = await queries.createUser({
+    role,
+    email: normalize(email),
+    fullName,
+    passwordHash,
+    passwordEnc,
+    departmentId: departmentId || null,
+  });
   console.log(`[seed] created ${role}: ${email} (user_id ${inserted.insertId})`);
+}
+
+function normalize(email) {
+  return email.trim().toLowerCase();
 }
 
 initDatabase()

@@ -29,6 +29,6 @@ Thumbs.db
 .idea/
 
 # build logs
-build-log.txt
+build-log*.txt
 install-log.txt
 

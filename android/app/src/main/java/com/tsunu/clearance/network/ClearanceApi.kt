@@ -141,4 +141,9 @@ interface ClearanceApi {
         @Path("studentId") studentId: Long,
         @Body body: ResetPasswordRequest,
     ): Response<ResetPasswordResponse>
+
+    @GET("api/admin/students")
+    suspend fun students(
+        @Header("Authorization") token: String,
+    ): Response<StudentsResponse>
 }

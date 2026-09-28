@@ -274,6 +274,15 @@ async function seedStaff() {
   const bogusStu = await send('PATCH', '/api/admin/students/999999999/password', { password: 'NewStu4567!' }, adminToken);
   check('student reset unknown id => 404', bogusStu.status === 404, { status: bogusStu.status });
 
+  // 14) admin views full student records (incl. recoverable password)
+  const stuList = await send('GET', '/api/admin/students', null, adminToken);
+  const rec = (stuList.json.students || []).find((s) => s.student_id === studentUserId);
+  check('admin lists students with details', stuList.status === 200 && !!rec, { status: stuList.status, n: stuList.json.students?.length });
+  check('student record has dept+faculty', rec && rec.dept_name === 'Computer Science' && rec.faculty_name === 'Faculty of Computing and Artificial Intelligence', { dept: rec?.dept_name, fac: rec?.faculty_name });
+  check('admin can read student password', rec && rec.password === 'NewStu4567!', { pw: rec?.password });
+  const stuListBlocked = await send('GET', '/api/admin/students', null, officerToken);
+  check('officer blocked from student records => 403', stuListBlocked.status === 403, { status: stuListBlocked.status });
+
   await close();
   const passed = results.filter((r) => r.ok).length;
   console.log(`\n== ${passed}/${results.length} passed ==`);

@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { queries } = require('../config/db');
 const { signToken } = require('../middleware/auth');
+const { encryptPassword } = require('../config/crypto');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -48,11 +49,13 @@ async function registerStudent(req, res) {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
+  const passwordEnc = encryptPassword(password);
   const { insertId: userId } = await queries.createUser({
     role: 'STUDENT',
     email: normEmail,
     fullName,
     passwordHash,
+    passwordEnc,
     departmentId: Number(departmentId),
   });
 

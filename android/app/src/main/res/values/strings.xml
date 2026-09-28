@@ -174,4 +174,15 @@
     <string name="admin_no_students">No students found.</string>
     <string name="admin_student_search_required">Enter a name, matric no or email to search.</string>
     <string name="admin_student_password_reset">Password reset for %1$s (%2$s)</string>
+    <string name="admin_students_records">Student records</string>
+    <string name="admin_student_records_hint">Full registration details, including department, faculty and password.</string>
+    <string name="admin_load_students">Load All Students</string>
+    <string name="admin_student_pw">Password: %1$s</string>
+    <string name="admin_student_pw_missing">Password: unavailable (reset to set one)</string>
+    <string name="admin_student_block">%1$s · %2$s
+Email: %3$s
+Dept: %4$s
+Faculty: %5$s
+Level: %6$s
+%7$s</string>
 </resources>

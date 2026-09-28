@@ -48,6 +48,7 @@ class AdminDashboardActivity : AppCompatActivity() {
         binding.btnResetStaffPassword.setOnClickListener { resetStaffPassword() }
         binding.btnSearchStudents.setOnClickListener { searchStudents() }
         binding.btnResetStudentPassword.setOnClickListener { resetStudentPassword() }
+        binding.btnLoadStudents.setOnClickListener { loadAllStudents() }
 
         binding.spinnerHodRole.adapter = ArrayAdapter(
             this,
@@ -340,6 +341,55 @@ class AdminDashboardActivity : AppCompatActivity() {
             } finally {
                 binding.btnResetStudentPassword.isEnabled = true
             }
+        }
+    }
+
+    private fun loadAllStudents() {
+        val token = token() ?: return
+        binding.btnLoadStudents.isEnabled = false
+        lifecycleScope.launch {
+            try {
+                val r = ApiClient.api.students("Bearer $token")
+                if (r.isSuccessful && r.body() != null) {
+                    renderStudents(r.body()!!.students)
+                } else {
+                    Toast.makeText(this@AdminDashboardActivity, parseError(r.code(), r.errorBody()?.string()), Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@AdminDashboardActivity, e.message ?: getString(R.string.network_error), Toast.LENGTH_LONG).show()
+            } finally {
+                binding.btnLoadStudents.isEnabled = true
+            }
+        }
+    }
+
+    private fun renderStudents(items: List<StudentProfile>) {
+        binding.containerStudents.removeAllViews()
+        if (items.isEmpty()) {
+            val tv = TextView(this)
+            tv.text = getString(R.string.admin_no_students)
+            tv.setTextColor(resources.getColor(R.color.secondary_text, null))
+            tv.textSize = 14f
+            binding.containerStudents.addView(tv)
+            return
+        }
+        items.forEach { s ->
+            val block = TextView(this)
+            val pwLine = s.password?.let { getString(R.string.admin_student_pw, it) }
+                ?: getString(R.string.admin_student_pw_missing)
+            block.text = getString(
+                R.string.admin_student_block,
+                s.fullName.orEmpty(),
+                s.matricNo.orEmpty(),
+                s.email.orEmpty(),
+                s.deptName ?: "-",
+                s.facultyName ?: "-",
+                s.level ?: "-",
+                pwLine,
+            )
+            block.setTextColor(resources.getColor(R.color.primary_text, null))
+            block.textSize = 14f
+            binding.containerStudents.addView(block)
         }
     }
 

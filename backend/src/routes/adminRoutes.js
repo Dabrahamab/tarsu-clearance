@@ -18,6 +18,9 @@ router.get('/staff', authorize('ADMIN'), staff.listStaff);
 router.post('/staff', authorize('ADMIN'), staff.createStaff);
 router.patch('/staff/:staffId/password', authorize('ADMIN'), staff.resetPassword);
 
+// Admin-only: full student records (incl. recoverable password view).
+router.get('/students', authorize('ADMIN'), staff.listStudents);
+
 // Admin-only: reset a student's password (student_id == user_id).
 router.patch('/students/:studentId/password', authorize('ADMIN'), staff.resetStudentPassword);
 

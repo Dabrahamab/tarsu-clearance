@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS users (
   is_active      TINYINT(1) NOT NULL DEFAULT 1,
   department_id  INT NULL,
   created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  pw_enc         TEXT NULL,
   CONSTRAINT fk_users_dept FOREIGN KEY (department_id)
     REFERENCES departments(dept_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
@@ -143,6 +144,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   is_active     INTEGER NOT NULL DEFAULT 1,
   department_id INTEGER NULL,
+  pw_enc        TEXT NULL,
   created_at    TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (department_id) REFERENCES departments(dept_id) ON DELETE SET NULL
 );
@@ -271,6 +273,11 @@ function initDatabase() {
   } else {
     sqlite.exec(SQLITE_DDL);
   }
+  // Non-destructive upgrade: add pw_enc to existing users tables.
+  const userCols = sqlite.prepare("SELECT name FROM pragma_table_info('users')").all();
+  if (!userCols.some((c) => c.name === 'pw_enc')) {
+    sqlite.exec('ALTER TABLE users ADD COLUMN pw_enc TEXT NULL');
+  }
   return seedDevelopmentData();
 }
 
@@ -314,23 +321,32 @@ function seedDevelopmentData() {
  */
 async function seedDemoUsers() {
   const bcrypt = require('bcryptjs');
+  const { encryptPassword } = require('./crypto');
   const demoUsers = [
     { role: 'OFFICER', email: 'officer@tarsu.edu.ng', fullName: 'Clearance Officer', password: 'Officer123!' },
     { role: 'ADMIN', email: 'admin@tarsu.edu.ng', fullName: 'System Administrator', password: 'Admin123' },
     { role: 'HOD', email: 'hod@tarsu.edu.ng', fullName: 'Head of Department', password: 'Hod123!' },
   ];
   for (const u of demoUsers) {
-    const existing = sqlite.prepare('SELECT user_id FROM users WHERE LOWER(email) = ?').get(u.email.toLowerCase());
-    if (existing) continue;
+    const existing = sqlite.prepare('SELECT user_id, pw_enc FROM users WHERE LOWER(email) = ?').get(u.email.toLowerCase());
+    if (existing) {
+      if (!existing.pw_enc) {
+        const passwordEnc = encryptPassword(u.password);
+        sqlite.prepare('UPDATE users SET pw_enc = ? WHERE user_id = ?').run(passwordEnc, existing.user_id);
+        console.log(`[db] backfilled pw_enc for demo ${u.role}: ${u.email}`);
+      }
+      continue;
+    }
     const passwordHash = await bcrypt.hash(u.password, 10);
+    const passwordEnc = encryptPassword(u.password);
     let departmentId = null;
     if (u.role === 'HOD') {
       const cs = sqlite.prepare('SELECT dept_id FROM departments WHERE LOWER(dept_name) = ?').get('computer science');
       departmentId = cs ? cs.dept_id : null;
     }
     sqlite.prepare(
-      'INSERT INTO users (role, email, full_name, password_hash, department_id) VALUES (?, ?, ?, ?, ?)'
-    ).run(u.role, u.email.toLowerCase(), u.fullName, passwordHash, departmentId);
+      'INSERT INTO users (role, email, full_name, password_hash, department_id, pw_enc) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(u.role, u.email.toLowerCase(), u.fullName, passwordHash, departmentId, passwordEnc);
     console.log(`[db] seeded demo ${u.role}: ${u.email}`);
   }
 }
@@ -380,8 +396,8 @@ const queries = {
     runSingle('SELECT user_id, role, email, full_name, password_hash, department_id, created_at FROM users WHERE user_id = ?', [id]),
   createUser: (u) =>
     insert(
-      'INSERT INTO users (role, email, full_name, password_hash, department_id) VALUES (?, ?, ?, ?, ?)',
-      [u.role, u.email, u.fullName, u.passwordHash, u.departmentId || null]
+      'INSERT INTO users (role, email, full_name, password_hash, department_id, pw_enc) VALUES (?, ?, ?, ?, ?, ?)',
+      [u.role, u.email, u.fullName, u.passwordHash, u.departmentId || null, u.passwordEnc || null]
     ),
   findStudentByMatric: (matric) =>
     runSingle(
@@ -639,8 +655,25 @@ const queries = {
        WHERE u.role IN ('HOD', 'OFFICER')
        ORDER BY u.role ASC, u.full_name ASC`
     ),
-  updateUserPassword: (userId, passwordHash) =>
-    run('UPDATE users SET password_hash = ? WHERE user_id = ?', [passwordHash, userId]),
+  listStudentsAll: () =>
+    run(
+      `SELECT u.user_id, u.email AS user_email, u.role, u.password_hash, u.pw_enc,
+              s.student_id, s.matric_no, s.full_name, s.email AS student_email,
+              s.department_id, s.level, s.created_at,
+              d.dept_name, d.faculty_id, f.faculty_name
+       FROM users u
+       INNER JOIN students s ON s.student_id = u.user_id
+       LEFT JOIN departments d ON d.dept_id = s.department_id
+       LEFT JOIN faculties f ON f.faculty_id = d.faculty_id
+       WHERE u.role = 'STUDENT'
+       ORDER BY s.full_name ASC`
+    ),
+  updateUserPassword: (userId, { passwordHash, passwordEnc }) =>
+    run('UPDATE users SET password_hash = ?, pw_enc = COALESCE(?, pw_enc) WHERE user_id = ?', [
+      passwordHash,
+      passwordEnc || null,
+      userId,
+    ]),
 };
 
 module.exports = { DRIVER, initDatabase, run, runSingle, insert, queries };

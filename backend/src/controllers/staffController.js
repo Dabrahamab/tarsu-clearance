@@ -5,6 +5,7 @@
  */
 const bcrypt = require('bcryptjs');
 const { queries } = require('../config/db');
+const { encryptPassword, decryptPassword } = require('../config/crypto');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const STAFF_ROLES = ['HOD', 'OFFICER'];
@@ -48,11 +49,13 @@ async function createStaff(req, res) {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
+  const passwordEnc = encryptPassword(password);
   const { insertId: userId } = await queries.createUser({
     role,
     email: normEmail,
     fullName: fullName.trim(),
     passwordHash,
+    passwordEnc,
     departmentId: deptId,
   });
 
@@ -74,8 +77,8 @@ async function resetPassword(req, res) {
     return res.status(400).json({ error: 'Only HOD/OFFICER passwords can be reset here.' });
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
-  await queries.updateUserPassword(staff.user_id, passwordHash);
+const passwordHash = await bcrypt.hash(password, 10);
+  await queries.updateUserPassword(staff.user_id, { passwordHash, passwordEnc: encryptPassword(password) });
   return res.json({ message: 'Password updated successfully.', staff: { ...staff, password_hash: undefined } });
 }
 
@@ -95,8 +98,27 @@ async function resetStudentPassword(req, res) {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  await queries.updateUserPassword(user.user_id, passwordHash);
+  await queries.updateUserPassword(user.user_id, { passwordHash, passwordEnc: encryptPassword(password) });
   return res.json({ message: 'Password updated successfully.', student });
 }
 
-module.exports = { listStaff, createStaff, resetPassword, resetStudentPassword };
+async function listStudents(req, res) {
+  const rows = await queries.listStudentsAll();
+  const students = rows.map((r) => ({
+    user_id: r.user_id,
+    student_id: r.student_id,
+    matric_no: r.matric_no,
+    full_name: r.full_name,
+    email: r.student_email || r.user_email,
+    department_id: r.department_id,
+    dept_name: r.dept_name || null,
+    faculty_id: r.faculty_id || null,
+    faculty_name: r.faculty_name || null,
+    level: r.level,
+    created_at: r.created_at,
+    password: decryptPassword(r.pw_enc) || null,
+  }));
+  return res.json({ students });
+}
+
+module.exports = { listStaff, createStaff, resetPassword, resetStudentPassword, listStudents };
